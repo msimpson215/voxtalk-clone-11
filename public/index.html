@@ -62,16 +62,22 @@
               if (chunk) appendLine("ai", chunk);
             }
 
-            // 🔹 Speech starts → halo ON
+            // 🔹 Turn halo ON with grace buffer during transcript
             if (evt.type === "response.audio_transcript.delta") {
               console.log("AI is speaking (transcript delta)");
               setSpeaking(true);
+              clearTimeout(window._speakTimer);
+              window._speakTimer = setTimeout(()=> {
+                console.log("Grace period expired → turning off halo");
+                setSpeaking(false);
+              }, 1000); // 1 second buffer
             }
 
-            // 🔹 Speech finished → halo OFF
+            // 🔹 Hard stop when audio finishes
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
               console.log("AI finished speaking (audio done/stopped)");
               setSpeaking(false);
+              clearTimeout(window._speakTimer);
             }
 
           } catch(err) {
