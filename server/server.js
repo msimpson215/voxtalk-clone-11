@@ -1,5 +1,10 @@
 import express from "express";
-import fetch from "node-fetch"; // install: npm install node-fetch
+import fetch from "node-fetch";
+
+if (!process.env.OPENAI_API_KEY) {
+  console.error("❌ ERROR: OPENAI_API_KEY is missing. Set it in .env or in your Render/Fly environment.");
+  process.exit(1); // Fail fast before starting the server
+}
 
 const app = express();
 app.use(express.static("public"));
@@ -20,6 +25,16 @@ app.post("/session", async (req, res) => {
       })
     });
 
+    if (!r.ok) {
+      const errorText = await r.text();
+      console.error("❌ OpenAI API error:", r.status, r.statusText, errorText);
+      return res.status(r.status).json({
+        error: "OpenAI session failed",
+        status: r.status,
+        details: errorText
+      });
+    }
+
     const data = await r.json();
     res.json({
       client_secret: data.client_secret,
@@ -27,10 +42,10 @@ app.post("/session", async (req, res) => {
       voice: "alloy"
     });
   } catch (e) {
-    console.error("Session error:", e);
-    res.status(500).json({ error: "session failed" });
+    console.error("❌ Session error (network or server code):", e);
+    res.status(500).json({ error: "Session failed (server error)" });
   }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Server running on " + PORT));
+app.listen(PORT, () => console.log("✅ Server running on " + PORT));
