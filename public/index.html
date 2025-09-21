@@ -2,27 +2,56 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk Clone-11</title>
+  <title>VoxTalk</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin:0; font-family:system-ui,sans-serif;
+      display:grid; place-items:center; min-height:100vh;
+      background: radial-gradient(circle at 50% 20%, #dbeafe, #93c5fd 40%, #1e3a8a 90%);
+    }
+    .app { text-align:center; max-width:600px; }
+    h1 { margin:6px 0; font-size:22px; }
+
+    #pttBtn {
+      width:140px; height:140px; border-radius:50%; border:none; cursor:pointer;
+      background: radial-gradient(circle at 30% 30%, #2563eb, #1e3a8a);
+      box-shadow:0 6px 20px rgba(37,99,235,.3);
+      transition: transform 0.15s ease, box-shadow 0.3s ease;
+      position: relative;
+    }
+    #pttBtn:hover { transform: scale(1.02); }
+    #pttBtn:active { transform: scale(0.95); }
+
+    /* Halo animation */
+    #pttBtn.speaking::before {
+      content:""; position:absolute; inset:-12px; border-radius:50%;
+      border:3px solid rgba(96,165,250,0.8);
+      animation: haloPulse 1.2s ease-in-out infinite;
+    }
+    @keyframes haloPulse {
+      0%   { transform: scale(0.9); opacity:0.9; }
+      50%  { transform: scale(1.2); opacity:0.3; }
+      100% { transform: scale(0.9); opacity:0.9; }
+    }
+
+    #answer {
+      margin-top:20px; padding:12px; border:1px solid #ccc;
+      border-radius:8px; background:white;
+      min-height:80px; text-align:left; font-size:14px;
+    }
+    .line { margin:6px 0; }
+    .me { color:#2563eb; font-weight:600; }
+    .ai { color:#065f46; font-weight:600; }
+    .text { color:#111; }
+    .muted { color:#777; font-style:italic; }
+  </style>
 </head>
 <body>
   <div class="app">
     <h1>Talk to VoxTalk</h1>
-    <button id="pttBtn" aria-pressed="false">
-      <!-- 10 halo layers -->
-      <div class="halo"></div>
-      <div class="halo"></div>
-      <div class="halo"></div>
-      <div class="halo"></div>
-      <div class="halo"></div>
-      <div class="halo"></div>
-      <div class="halo"></div>
-      <div class="halo"></div>
-      <div class="halo"></div>
-      <div class="halo"></div>
-    </button>
+    <button id="pttBtn" aria-pressed="false"></button>
     <div id="answer"><div class="muted">Conversation will appear here.</div></div>
     <audio id="remote" autoplay playsinline></audio>
   </div>
@@ -31,8 +60,6 @@
     const pttBtn   = document.getElementById('pttBtn');
     const answerEl = document.getElementById('answer');
     const rtAudio  = document.getElementById('remote');
-    let talking = false;
-    let micTrack = null;
 
     function appendLine(role, text) {
       if (answerEl.querySelector('.muted')) answerEl.innerHTML = '';
@@ -43,10 +70,7 @@
       answerEl.appendChild(div);
       answerEl.scrollTop = answerEl.scrollHeight;
     }
-
-    function setSpeaking(on) { 
-      pttBtn.classList.toggle('speaking', on); 
-    }
+    function setSpeaking(on) { pttBtn.classList.toggle('speaking', on); }
 
     async function initRealtime() {
       try {
@@ -55,7 +79,7 @@
 
         const pc = new RTCPeerConnection();
         const mic = await navigator.mediaDevices.getUserMedia({ audio:true });
-        micTrack = mic.getTracks()[0];
+        const micTrack = mic.getTracks()[0];
         micTrack.enabled = false;
         pc.addTrack(micTrack, mic);
 
@@ -65,29 +89,20 @@
         };
 
         const dc = pc.createDataChannel("events");
-        let aiSpeaking = false;
-
         dc.onmessage = (e)=> {
           try {
             const evt = JSON.parse(e.data);
-            console.log("EVENT:", evt.type);
-
             if (evt.type === "response.message.delta") {
               const chunk = evt.delta.map(d=>d.content?.[0]?.text||"").join("");
               if (chunk) appendLine("ai", chunk);
             }
-
             if (evt.type === "response.audio.start") {
-              aiSpeaking = true;
               setSpeaking(true);
             }
-            if (evt.type === "response.done") {
-              aiSpeaking = false;
+            if (evt.type === "response.audio.end" || evt.type === "response.done") {
               setSpeaking(false);
             }
-          } catch (err) {
-            console.error("Event parse error:", err);
-          }
+          } catch {}
         };
 
         const offer = await pc.createOffer({ offerToReceiveAudio:true });
@@ -107,28 +122,22 @@
         const answer = { type:"answer", sdp: await r.text() };
         await pc.setRemoteDescription(answer);
 
-        // Toggle mic on/off
+        let talking = false;
         pttBtn.onclick = () => {
-          if (!talking) {
-            talking = true;
-            micTrack.enabled = true;
+          talking = !talking;
+          micTrack.enabled = talking;
+          if (talking) {
             appendLine("me","(Listening...)");
           } else {
-            talking = false;
-            micTrack.enabled = false;
-            rtAudio.pause();
-            rtAudio.srcObject = null;
             setSpeaking(false);
             appendLine("me","(Stopped)");
           }
         };
 
-        // Fallback: audio element hooks
-        rtAudio.addEventListener("playing", ()=> {
-          if (!aiSpeaking) setSpeaking(true);
-        });
-        rtAudio.addEventListener("ended", ()=> setSpeaking(false));
-        rtAudio.addEventListener("pause", ()=> setSpeaking(false));
+        // Fallback: detect audio element play/stop
+        rtAudio.addEventListener("playing", ()=> setSpeaking(true));
+        rtAudio.addEventListener("pause",   ()=> setSpeaking(false));
+        rtAudio.addEventListener("ended",   ()=> setSpeaking(false));
 
       } catch(err) {
         console.error("Realtime init failed", err);
