@@ -8,61 +8,156 @@
 </head>
 <body>
   <div class="container">
+    <!-- Talk / Stop Button -->
     <button id="talk-button">
-      <span class="button-label">Click here to talk</span>
+      <span class="button-label">Click to talk</span>
       <div class="halo"></div>
     </button>
 
-    <button id="stop-button">Stop</button>
-
+    <!-- Transcript box -->
     <div id="answer" class="transcript-box">
       <div class="muted">Conversation will appear here.</div>
     </div>
 
+    <!-- Get Transcript Link -->
+    <button id="get-transcript" class="get-transcript-btn">📧 Get a copy of this conversation</button>
+
+    <!-- Remote audio stream -->
     <audio id="remote" autoplay playsinline></audio>
+  </div>
+
+  <!-- Email Modal -->
+  <div id="email-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Send Transcript</h3>
+      <input type="email" id="email-input" placeholder="Enter your email" />
+      <div class="modal-actions">
+        <button id="send-email">Send</button>
+        <button id="cancel-email">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    Powered by <span class="brand">VoxTalk™</span>
   </div>
 
   <script>
     const talkBtn   = document.getElementById('talk-button');
-    const stopBtn   = document.getElementById('stop-button');
     const answerEl  = document.getElementById('answer');
     const rtAudio   = document.getElementById('remote');
+    const modal     = document.getElementById('email-modal');
+    const sendBtn   = document.getElementById('send-email');
+    const cancelBtn = document.getElementById('cancel-email');
+    const emailInput= document.getElementById('email-input');
+
+    let pc, dc, micTrack;
+    let listening = false;
+    let transcript = [];
 
     function appendLine(role, text) {
       if (answerEl.querySelector('.muted')) answerEl.innerHTML = '';
       const div = document.createElement('div');
       div.className = 'line';
-      div.innerHTML = `<span class="${role}">${role==='ai'?'AI:':''}</span>
+      div.innerHTML = `<span class="${role}">${role === 'ai' ? 'AI:' : 'You:'}</span>
                        <span class="text">${text}</span>`;
       answerEl.appendChild(div);
       answerEl.scrollTop = answerEl.scrollHeight;
+      transcript.push(`${role === 'ai' ? 'AI' : 'You'}: ${text}`);
     }
 
-    function setSpeaking(on) { 
-      talkBtn.classList.toggle('speaking', on); 
+    function setSpeaking(on) {
+      talkBtn.classList.toggle('speaking', on);
     }
 
     async function initRealtime() {
       try {
-        const s = await fetch("/session", { method:"POST" });
-        const { client_secret, model, voice } = await s.json();
+        const s = await fetch("/session", { method: "POST" });
+        const { client_secret, model } = await s.json();
 
-        const pc = new RTCPeerConnection();
-        const mic = await navigator.mediaDevices.getUserMedia({ audio:true });
-        const micTrack = mic.getTracks()[0];
+        pc = new RTCPeerConnection();
+        const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micTrack = mic.getTracks()[0];
         micTrack.enabled = false;
         pc.addTrack(micTrack, mic);
 
-        pc.ontrack = (ev)=> {
+        pc.ontrack = (ev) => {
           rtAudio.srcObject = ev.streams[0];
           rtAudio.play().catch(()=>{});
         };
 
-        const dc = pc.createDataChannel("events");
-        dc.onmessage = (e)=> {
+        dc = pc.createDataChannel("events");
+        dc.onmessage = (e) => {
           try {
             const evt = JSON.parse(e.data);
-
             if (evt.type === "response.message.delta") {
-              const chunk = evt.delta.map(d=>d.content?.[0]?.text||"").join("");
-              if (
+              const chunk = evt.delta.map(d => d.content?.[0]?.text || "").join("");
+              if (chunk) appendLine("ai", chunk);
+            }
+            if (evt.type === "response.audio.start") setSpeaking(true);
+            if (evt.type === "response.audio.end")   setSpeaking(false);
+          } catch (err) { console.error("DC msg error", err); }
+        };
+
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+
+        const resp = await fetch("https://api.openai.com/v1/realtime?model=" + model, {
+          method: "POST",
+          body: offer.sdp,
+          headers: {
+            Authorization: "Bearer " + client_secret,
+            "Content-Type": "application/sdp"
+          }
+        });
+
+        const answer = { type: "answer", sdp: await resp.text() };
+        await pc.setRemoteDescription(answer);
+      } catch (err) {
+        console.error("Realtime init error:", err);
+      }
+    }
+
+    talkBtn.onclick = () => {
+      if (!micTrack) return;
+      listening = !listening;
+      micTrack.enabled = listening;
+      talkBtn.classList.toggle('listening', listening);
+    };
+
+    // Get transcript button -> open modal
+    document.getElementById('get-transcript').onclick = () => {
+      modal.classList.remove('hidden');
+      emailInput.focus();
+    };
+
+    cancelBtn.onclick = () => {
+      modal.classList.add('hidden');
+      emailInput.value = "";
+    };
+
+    sendBtn.onclick = async () => {
+      const email = emailInput.value.trim();
+      if (!email) return alert("Please enter a valid email.");
+      console.log("📨 Email requested:", email, "Transcript:", transcript.join("\n"));
+
+      // Placeholder POST request — connect to real backend later
+      try {
+        await fetch("/send-transcript", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, transcript })
+        });
+        alert("Transcript request sent!");
+      } catch (err) {
+        console.error("Email send error:", err);
+      }
+      modal.classList.add('hidden');
+      emailInput.value = "";
+    };
+
+    initRealtime();
+  </script>
+</body>
+</html>
