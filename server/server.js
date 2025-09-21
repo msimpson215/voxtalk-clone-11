@@ -1,5 +1,4 @@
 import express from "express";
-import fetch from "node-fetch";   // if Node 18+, fetch is built-in; safe to keep this
 
 const app = express();
 app.use(express.static("public"));
