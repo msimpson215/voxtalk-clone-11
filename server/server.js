@@ -1,5 +1,5 @@
 import express from "express";
-import fetch from "node-fetch";   // remember to install: npm install node-fetch
+import fetch from "node-fetch"; // install with: npm install node-fetch
 
 const app = express();
 app.use(express.static("public"));
@@ -16,11 +16,21 @@ app.post("/session", async (req, res) => {
         model: "gpt-4o-realtime-preview",
         voice: "alloy",
         instructions:
-          "You are VoxTalk, always respond in English. Never switch to Spanish."
+          "You are VoxTalk, an AI voice assistant. Always respond in English. Never default to Spanish."
       })
     });
 
     const data = await r.json();
     res.json({
       client_secret: data.client_secret,
-      model: "gpt-
+      model: "gpt-4o-realtime-preview",
+      voice: "alloy"
+    });
+  } catch (e) {
+    console.error("Session error:", e);
+    res.status(500).json({ error: "session failed" });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Server running on " + PORT));
