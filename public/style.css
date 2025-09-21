@@ -46,7 +46,6 @@ h1 { margin:12px 0; font-size:24px; }
 #pttBtn.speaking::before {
   animation: pulse1 1.4s ease-in-out infinite;
 }
-
 #pttBtn.speaking::after {
   animation: pulse2 2.1s ease-in-out infinite;
 }
