@@ -1,4 +1,5 @@
 import express from "express";
+import fetch from "node-fetch"; // install: npm install node-fetch
 
 const app = express();
 app.use(express.static("public"));
@@ -15,23 +16,16 @@ app.post("/session", async (req, res) => {
         model: "gpt-4o-realtime-preview",
         voice: "alloy",
         instructions:
-          "You are an AI voice assistant. When the user starts a session, greet them by saying: 'Hi, this is VoxTalk. How can I help you today, Mia?' ALWAYS respond in English. Never default to Spanish. If the user speaks another language, translate it and reply only in English."
+          "You are VoxTalk, an AI voice assistant. Always respond in English. Never default to Spanish."
       })
     });
 
     const data = await r.json();
-
-    // Add a 10-minute timeout
-    const session = {
+    res.json({
       client_secret: data.client_secret,
       model: "gpt-4o-realtime-preview",
-      voice: "alloy",
-      deepgramKey: process.env.DEEPGRAM_API_KEY, // keep this for now
-      expires_at: Date.now() + 10 * 60 * 1000 // 10 minutes
-    };
-
-    res.json(session);
-
+      voice: "alloy"
+    });
   } catch (e) {
     console.error("Session error:", e);
     res.status(500).json({ error: "session failed" });
