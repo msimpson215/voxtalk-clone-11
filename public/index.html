@@ -2,28 +2,50 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk</title>
+  <title>Talk to VoxTalk</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
+    <!-- Title -->
+    <h2 class="talk-title">TalkToVoxTalk</h2>
+
     <!-- Talk / Stop Button -->
     <button id="talk-button">
-      <span class="button-label">Click to talk</span>
-      <div class="halo"></div>
+      <span class="button-label">Click to Talk</span>
+      <div class="halo-container">
+        <div class="halo"></div>
+        <div class="halo"></div>
+        <div class="halo"></div>
+        <div class="halo"></div>
+        <div class="halo"></div>
+        <div class="halo"></div>
+        <div class="halo"></div>
+        <div class="halo"></div>
+        <div class="halo"></div>
+        <div class="halo"></div>
+      </div>
     </button>
 
+    <!-- Stop button (kept as requested) -->
+    <button id="stop-button" class="stop-btn">Stop</button>
+
     <!-- Transcript box -->
-    <div id="answer" class="transcript-box">
-      <div class="muted">Conversation will appear here.</div>
-    </div>
+    <div id="answer" class="transcript-box"></div>
 
-    <!-- Get Transcript Link -->
-    <button id="get-transcript" class="get-transcript-btn">📧 Get a copy of this conversation</button>
+    <!-- Get Copy Button -->
+    <button id="get-transcript" class="get-transcript-btn">
+      📧 Get a copy of this conversation
+    </button>
 
-    <!-- Remote audio stream -->
+    <!-- Remote audio -->
     <audio id="remote" autoplay playsinline></audio>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    Powered by <span class="brand">VoxTalk™</span>
   </div>
 
   <!-- Email Modal -->
@@ -38,13 +60,9 @@
     </div>
   </div>
 
-  <!-- Footer -->
-  <div class="footer">
-    Powered by <span class="brand">VoxTalk™</span>
-  </div>
-
   <script>
     const talkBtn   = document.getElementById('talk-button');
+    const stopBtn   = document.getElementById('stop-button');
     const answerEl  = document.getElementById('answer');
     const rtAudio   = document.getElementById('remote');
     const modal     = document.getElementById('email-modal');
@@ -57,14 +75,13 @@
     let transcript = [];
 
     function appendLine(role, text) {
-      if (answerEl.querySelector('.muted')) answerEl.innerHTML = '';
       const div = document.createElement('div');
       div.className = 'line';
-      div.innerHTML = `<span class="${role}">${role === 'ai' ? 'AI:' : 'You:'}</span>
+      div.innerHTML = `<span class="${role}">${role === 'ai' ? 'VoxTalk:' : 'You:'}</span>
                        <span class="text">${text}</span>`;
       answerEl.appendChild(div);
       answerEl.scrollTop = answerEl.scrollHeight;
-      transcript.push(`${role === 'ai' ? 'AI' : 'You'}: ${text}`);
+      transcript.push(`${role === 'ai' ? 'VoxTalk' : 'You'}: ${text}`);
     }
 
     function setSpeaking(on) {
@@ -75,6 +92,10 @@
       try {
         const s = await fetch("/session", { method: "POST" });
         const { client_secret, model } = await s.json();
+        if (!client_secret) {
+          console.error("No client_secret received. Check API key/server logs.");
+          return;
+        }
 
         pc = new RTCPeerConnection();
         const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -112,6 +133,11 @@
           }
         });
 
+        if (!resp.ok) {
+          console.error("Realtime API error:", resp.status, await resp.text());
+          return;
+        }
+
         const answer = { type: "answer", sdp: await resp.text() };
         await pc.setRemoteDescription(answer);
       } catch (err) {
@@ -126,7 +152,12 @@
       talkBtn.classList.toggle('listening', listening);
     };
 
-    // Get transcript button -> open modal
+    stopBtn.onclick = () => {
+      if (pc) pc.close();
+      setSpeaking(false);
+      talkBtn.classList.remove('listening');
+    };
+
     document.getElementById('get-transcript').onclick = () => {
       modal.classList.remove('hidden');
       emailInput.focus();
@@ -139,20 +170,8 @@
 
     sendBtn.onclick = async () => {
       const email = emailInput.value.trim();
-      if (!email) return alert("Please enter a valid email.");
-      console.log("📨 Email requested:", email, "Transcript:", transcript.join("\n"));
-
-      // Placeholder POST request — connect to real backend later
-      try {
-        await fetch("/send-transcript", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, transcript })
-        });
-        alert("Transcript request sent!");
-      } catch (err) {
-        console.error("Email send error:", err);
-      }
+      if (!email) return alert("Enter a valid email.");
+      console.log("Email:", email, "Transcript:", transcript.join("\n"));
       modal.classList.add('hidden');
       emailInput.value = "";
     };
