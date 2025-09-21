@@ -97,9 +97,11 @@
               if (chunk) appendLine("ai", chunk);
             }
             if (evt.type === "response.audio.start") {
+              console.log("AI started speaking");
               setSpeaking(true);
             }
             if (evt.type === "response.audio.end" || evt.type === "response.done") {
+              console.log("AI finished speaking");
               setSpeaking(false);
             }
           } catch {}
@@ -134,7 +136,7 @@
           }
         };
 
-        // Fallback: detect audio element play/stop
+        // Fallback in case events don’t fire
         rtAudio.addEventListener("playing", ()=> setSpeaking(true));
         rtAudio.addEventListener("pause",   ()=> setSpeaking(false));
         rtAudio.addEventListener("ended",   ()=> setSpeaking(false));
