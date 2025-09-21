@@ -5,6 +5,7 @@
   <title>VoxTalk</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
+  <!-- ... (styles unchanged) ... -->
   <style>
     body {
       margin:0; font-family:system-ui,sans-serif;
@@ -12,30 +13,28 @@
       background: radial-gradient(circle at 50% 20%, #dbeafe, #93c5fd 40%, #1e3a8a 90%);
     }
     .app { text-align:center; max-width:600px; }
+    .demo-label { font-size:12px; color:#111; margin-bottom:4px; }
     h1 { margin:6px 0; font-size:22px; }
-
-    #pttBtn {
-      width:140px; height:140px; border-radius:50%; border:none; cursor:pointer;
-      background: radial-gradient(circle at 30% 30%, #2563eb, #1e3a8a);
-      box-shadow:0 6px 20px rgba(37,99,235,.3);
-      transition: transform 0.15s ease, box-shadow 0.3s ease;
+    #pttBtn { width:120px; height:120px; border-radius:50%; border:none; cursor:pointer;
+      background: radial-gradient(circle at 30% 30%, #3b82f6, #1e40af);
+      box-shadow:0 6px 18px rgba(37,99,235,.3); transition: transform 0.15s ease, box-shadow 0.3s ease;
       position: relative;
     }
     #pttBtn:hover { transform: scale(1.02); }
     #pttBtn:active { transform: scale(0.95); }
-
-    /* Halo animation */
+    #pttBtn.listening { animation: listenPulse 1.6s ease-in-out infinite; }
+    @keyframes listenPulse { 0% { box-shadow:0 0 0 0 rgba(59,130,246,.7); }
+      50% { box-shadow:0 0 0 20px rgba(59,130,246,0); }
+      100% { box-shadow:0 0 0 0 rgba(59,130,246,0); }
+    }
     #pttBtn.speaking::before {
-      content:""; position:absolute; inset:-12px; border-radius:50%;
-      border:3px solid rgba(96,165,250,0.8);
-      animation: haloPulse 1.2s ease-in-out infinite;
+      content:""; position:absolute; inset:0; border-radius:50%;
+      background: conic-gradient(from 0deg, #60a5fa, #2563eb, #1e40af, #60a5fa);
+      animation: swirl 2s linear infinite;
+      -webkit-mask: radial-gradient(circle, rgba(0,0,0,0) 65%, rgba(0,0,0,1) 66%);
+              mask: radial-gradient(circle, rgba(0,0,0,0) 65%, rgba(0,0,0,1) 66%);
     }
-    @keyframes haloPulse {
-      0%   { transform: scale(0.9); opacity:0.9; }
-      50%  { transform: scale(1.2); opacity:0.3; }
-      100% { transform: scale(0.9); opacity:0.9; }
-    }
-
+    @keyframes swirl { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     #answer {
       margin-top:20px; padding:12px; border:1px solid #ccc;
       border-radius:8px; background:white;
@@ -50,6 +49,7 @@
 </head>
 <body>
   <div class="app">
+    <p class="demo-label">Demo</p>
     <h1>Talk to VoxTalk</h1>
     <button id="pttBtn" aria-pressed="false"></button>
     <div id="answer"><div class="muted">Conversation will appear here.</div></div>
@@ -70,6 +70,7 @@
       answerEl.appendChild(div);
       answerEl.scrollTop = answerEl.scrollHeight;
     }
+    function setListening(on) { pttBtn.classList.toggle('listening', on); }
     function setSpeaking(on) { pttBtn.classList.toggle('speaking', on); }
 
     async function initRealtime() {
@@ -96,14 +97,6 @@
               const chunk = evt.delta.map(d=>d.content?.[0]?.text||"").join("");
               if (chunk) appendLine("ai", chunk);
             }
-            if (evt.type === "response.audio.start") {
-              console.log("AI started speaking");
-              setSpeaking(true);
-            }
-            if (evt.type === "response.audio.end" || evt.type === "response.done") {
-              console.log("AI finished speaking");
-              setSpeaking(false);
-            }
           } catch {}
         };
 
@@ -128,24 +121,27 @@
         pttBtn.onclick = () => {
           talking = !talking;
           micTrack.enabled = talking;
+          setListening(talking);
           if (talking) {
             appendLine("me","(Listening...)");
           } else {
-            setSpeaking(false);
+            setListening(false); setSpeaking(false);
             appendLine("me","(Stopped)");
           }
         };
 
-        // Fallback in case events don’t fire
         rtAudio.addEventListener("playing", ()=> setSpeaking(true));
-        rtAudio.addEventListener("pause",   ()=> setSpeaking(false));
-        rtAudio.addEventListener("ended",   ()=> setSpeaking(false));
+        rtAudio.addEventListener("ended",   ()=> { setSpeaking(false); setListening(false); talking=false; });
+        rtAudio.addEventListener("pause",   ()=> { setSpeaking(false); setListening(false); talking=false; });
 
       } catch(err) {
         console.error("Realtime init failed", err);
       }
     }
     initRealtime();
+
+    // Add your custom greeting on load!
+    appendLine("ai", "Hello, this is VoxTalk. I was created by your dad, Marty Simpson.<br><br>Hello Mia and Rachel, nice to meet you!<br><br>You can ask me anything you would like.");
   </script>
 </body>
 </html>
