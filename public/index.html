@@ -10,7 +10,19 @@
 <body>
   <div class="app">
     <h1>Talk to VoxTalk</h1>
-    <button id="pttBtn" aria-pressed="false"></button>
+    <button id="pttBtn" aria-pressed="false">
+      <!-- 10 halo layers -->
+      <div class="halo"></div>
+      <div class="halo"></div>
+      <div class="halo"></div>
+      <div class="halo"></div>
+      <div class="halo"></div>
+      <div class="halo"></div>
+      <div class="halo"></div>
+      <div class="halo"></div>
+      <div class="halo"></div>
+      <div class="halo"></div>
+    </button>
     <div id="answer"><div class="muted">Conversation will appear here.</div></div>
     <audio id="remote" autoplay playsinline></audio>
   </div>
@@ -53,10 +65,12 @@
         };
 
         const dc = pc.createDataChannel("events");
+        let aiSpeaking = false;
+
         dc.onmessage = (e)=> {
           try {
             const evt = JSON.parse(e.data);
-            console.log("EVENT:", evt.type, evt);
+            console.log("EVENT:", evt.type);
 
             if (evt.type === "response.message.delta") {
               const chunk = evt.delta.map(d=>d.content?.[0]?.text||"").join("");
@@ -64,15 +78,11 @@
             }
 
             if (evt.type === "response.audio.start") {
-              console.log("AI started speaking");
+              aiSpeaking = true;
               setSpeaking(true);
             }
-            if (
-              evt.type === "response.audio.end" || 
-              evt.type === "response.audio.done" ||
-              evt.type === "output_audio_buffer.stopped"
-            ) {
-              console.log("AI finished speaking");
+            if (evt.type === "response.done") {
+              aiSpeaking = false;
               setSpeaking(false);
             }
           } catch (err) {
@@ -115,17 +125,10 @@
 
         // Fallback: audio element hooks
         rtAudio.addEventListener("playing", ()=> {
-          console.log("Fallback: audio playing");
-          setSpeaking(true);
+          if (!aiSpeaking) setSpeaking(true);
         });
-        rtAudio.addEventListener("ended", ()=> {
-          console.log("Fallback: audio ended");
-          setSpeaking(false);
-        });
-        rtAudio.addEventListener("pause", ()=> {
-          console.log("Fallback: audio paused");
-          setSpeaking(false);
-        });
+        rtAudio.addEventListener("ended", ()=> setSpeaking(false));
+        rtAudio.addEventListener("pause", ()=> setSpeaking(false));
 
       } catch(err) {
         console.error("Realtime init failed", err);
