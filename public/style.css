@@ -1,7 +1,7 @@
 body {
   margin: 0;
   height: 100vh;
-  background: #fff;
+  background: radial-gradient(circle at 50% 20%, #dbeafe 10%, #93c5fd 40%, #1e3a8a 90%);
   font-family: system-ui, sans-serif;
   display: flex;
   align-items: center;
@@ -13,6 +13,13 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 15px;
+}
+
+.talk-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 8px;
 }
 
 #talk-button {
@@ -42,24 +49,60 @@ body {
   letter-spacing: 0.5px;
 }
 
-.halo {
+.halo-container {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
-  border: 3px solid rgba(59, 130, 246, 0.7);
+  display: grid;
+  place-items: center;
+  z-index: 1;
   opacity: 0;
-  animation: pulse 1.2s infinite;
 }
 
-#talk-button.speaking .halo {
+#talk-button.speaking .halo-container {
   opacity: 1;
+}
+
+.halo-container .halo {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 3px solid rgba(59, 130, 246, 0.5);
+  opacity: 0;
+  animation: multi-pulse 1.8s infinite ease-out;
+}
+
+.halo-container .halo:nth-child(2) { animation-delay: 0.15s; }
+.halo-container .halo:nth-child(3) { animation-delay: 0.3s; }
+.halo-container .halo:nth-child(4) { animation-delay: 0.45s; }
+.halo-container .halo:nth-child(5) { animation-delay: 0.6s; }
+.halo-container .halo:nth-child(6) { animation-delay: 0.75s; }
+.halo-container .halo:nth-child(7) { animation-delay: 0.9s; }
+.halo-container .halo:nth-child(8) { animation-delay: 1.05s; }
+.halo-container .halo:nth-child(9) { animation-delay: 1.2s; }
+.halo-container .halo:nth-child(10) { animation-delay: 1.35s; }
+
+@keyframes multi-pulse {
+  0%   { transform: scale(1); opacity: 0.7; }
+  50%  { transform: scale(1.8); opacity: 0.4; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.stop-btn {
+  background: #e11d48;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 0.9rem;
 }
 
 .transcript-box {
   width: 80%;
   max-width: 500px;
   min-height: 50px;
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.8);
   border-radius: 20px;
   padding: 10px 15px;
   font-size: 0.9rem;
@@ -69,11 +112,11 @@ body {
 .get-transcript-btn {
   background: none;
   border: none;
-  color: #2563eb;
+  color: white;
   font-size: 0.85rem;
   text-decoration: underline;
   cursor: pointer;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 .footer {
@@ -81,7 +124,7 @@ body {
   bottom: 8px;
   right: 12px;
   font-size: 0.7rem;
-  color: rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .modal {
@@ -101,31 +144,8 @@ body {
   background: white;
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
   display: flex;
   flex-direction: column;
   gap: 10px;
   width: 300px;
-}
-
-.modal-content h3 {
-  margin: 0;
-}
-
-.modal-content input {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-@keyframes pulse {
-  0%   { transform: scale(1); opacity: 0.7; }
-  70%  { transform: scale(1.4); opacity: 0; }
-  100% { transform: scale(1.4); opacity: 0; }
 }
