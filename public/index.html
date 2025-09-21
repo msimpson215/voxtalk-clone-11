@@ -9,7 +9,6 @@
 </head>
 <body>
   <div class="app">
-    <p class="demo-label">Demo</p>
     <h1>Talk to VoxTalk</h1>
     <button id="pttBtn" aria-pressed="false"></button>
     <div id="answer"><div class="muted">Conversation will appear here.</div></div>
@@ -55,51 +54,20 @@
         dc.onmessage = (e)=> {
           try {
             const evt = JSON.parse(e.data);
-            console.log("EVENT:", evt.type, evt);
-
             if (evt.type === "response.message.delta") {
               const chunk = evt.delta.map(d=>d.content?.[0]?.text||"").join("");
               if (chunk) appendLine("ai", chunk);
             }
-
-            // 🔹 Turn halo ON with grace buffer during transcript
-            if (evt.type === "response.audio_transcript.delta") {
-              console.log("AI is speaking (transcript delta)");
+            if (evt.type === "response.audio.start") {
+              console.log("AI started speaking");
               setSpeaking(true);
-              clearTimeout(window._speakTimer);
-              window._speakTimer = setTimeout(()=> {
-                console.log("Grace period expired → turning off halo");
-                setSpeaking(false);
-              }, 1000); // 1 second buffer
             }
-
-            // 🔹 Hard stop when audio finishes
-            if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
-              console.log("AI finished speaking (audio done/stopped)");
+            if (evt.type === "response.audio.end" || evt.type === "response.audio.done") {
+              console.log("AI finished speaking");
               setSpeaking(false);
-              clearTimeout(window._speakTimer);
             }
-
-          } catch(err) {
-            console.error("Parse error:", e.data, err);
-          }
+          } catch {}
         };
-
-        // Fallback audio element events
-        let firstPlay = true;
-        rtAudio.addEventListener("playing", ()=> {
-          if (firstPlay) { firstPlay = false; return; }
-          console.log("Fallback: audio element playing");
-          setSpeaking(true);
-        });
-        rtAudio.addEventListener("pause", ()=> {
-          console.log("Fallback: audio element paused");
-          setSpeaking(false);
-        });
-        rtAudio.addEventListener("ended", ()=> {
-          console.log("Fallback: audio element ended");
-          setSpeaking(false);
-        });
 
         const offer = await pc.createOffer({ offerToReceiveAudio:true });
         await pc.setLocalDescription(offer);
@@ -122,16 +90,17 @@
         pttBtn.onclick = () => {
           talking = !talking;
           micTrack.enabled = talking;
-
           if (talking) {
             appendLine("me","(Listening...)");
           } else {
             setSpeaking(false);
-            rtAudio.pause();
-            rtAudio.currentTime = 0;
             appendLine("me","(Stopped)");
           }
         };
+
+        rtAudio.addEventListener("playing", ()=> setSpeaking(true));
+        rtAudio.addEventListener("ended",   ()=> setSpeaking(false));
+        rtAudio.addEventListener("pause",   ()=> setSpeaking(false));
 
       } catch(err) {
         console.error("Realtime init failed", err);
