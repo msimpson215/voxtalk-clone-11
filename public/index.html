@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk</title>
+  <title>VoxTalk Clone-11</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
@@ -19,6 +19,7 @@
     const pttBtn   = document.getElementById('pttBtn');
     const answerEl = document.getElementById('answer');
     const rtAudio  = document.getElementById('remote');
+    let talking = false;
 
     function appendLine(role, text) {
       if (answerEl.querySelector('.muted')) answerEl.innerHTML = '';
@@ -86,21 +87,32 @@
         const answer = { type:"answer", sdp: await r.text() };
         await pc.setRemoteDescription(answer);
 
-        let talking = false;
+        // Toggle mic on/off with button click
         pttBtn.onclick = () => {
           talking = !talking;
           micTrack.enabled = talking;
           if (talking) {
             appendLine("me","(Listening...)");
           } else {
+            micTrack.enabled = false;
             setSpeaking(false);
             appendLine("me","(Stopped)");
           }
         };
 
-        rtAudio.addEventListener("playing", ()=> setSpeaking(true));
-        rtAudio.addEventListener("ended",   ()=> setSpeaking(false));
-        rtAudio.addEventListener("pause",   ()=> setSpeaking(false));
+        // Fallback: use audio element events to control halo
+        rtAudio.addEventListener("playing", ()=> {
+          console.log("Fallback: audio playing");
+          setSpeaking(true);
+        });
+        rtAudio.addEventListener("ended", ()=> {
+          console.log("Fallback: audio ended");
+          setSpeaking(false);
+        });
+        rtAudio.addEventListener("pause", ()=> {
+          console.log("Fallback: audio paused");
+          setSpeaking(false);
+        });
 
       } catch(err) {
         console.error("Realtime init failed", err);
