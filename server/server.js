@@ -2,11 +2,12 @@ import express from "express";
 import fetch from "node-fetch";
 
 if (!process.env.OPENAI_API_KEY) {
-  console.error("❌ ERROR: OPENAI_API_KEY is missing. Set it in .env or in your Render/Fly environment.");
-  process.exit(1); // Fail fast before starting the server
+  console.error("❌ ERROR: OPENAI_API_KEY not set.");
+  process.exit(1);
 }
 
 const app = express();
+app.use(express.json());
 app.use(express.static("public"));
 
 app.post("/session", async (req, res) => {
@@ -28,11 +29,7 @@ app.post("/session", async (req, res) => {
     if (!r.ok) {
       const errorText = await r.text();
       console.error("❌ OpenAI API error:", r.status, r.statusText, errorText);
-      return res.status(r.status).json({
-        error: "OpenAI session failed",
-        status: r.status,
-        details: errorText
-      });
+      return res.status(r.status).json({ error: "OpenAI session failed", details: errorText });
     }
 
     const data = await r.json();
@@ -42,9 +39,16 @@ app.post("/session", async (req, res) => {
       voice: "alloy"
     });
   } catch (e) {
-    console.error("❌ Session error (network or server code):", e);
+    console.error("❌ Session error:", e);
     res.status(500).json({ error: "Session failed (server error)" });
   }
+});
+
+// Placeholder email endpoint
+app.post("/send-transcript", (req, res) => {
+  const { email, transcript } = req.body;
+  console.log(`📩 Transcript requested for ${email}:\n${transcript.join("\n")}`);
+  res.json({ success: true });
 });
 
 const PORT = process.env.PORT || 3000;
