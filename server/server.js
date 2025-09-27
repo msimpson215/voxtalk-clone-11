@@ -1,13 +1,6 @@
 import express from "express";
-import fetch from "node-fetch";
-
-if (!process.env.OPENAI_API_KEY) {
-  console.error("❌ ERROR: OPENAI_API_KEY not set.");
-  process.exit(1);
-}
 
 const app = express();
-app.use(express.json());
 app.use(express.static("public"));
 
 app.post("/session", async (req, res) => {
@@ -22,15 +15,9 @@ app.post("/session", async (req, res) => {
         model: "gpt-4o-realtime-preview",
         voice: "alloy",
         instructions:
-          "You are VoxTalk, an AI voice assistant. Always respond in English. Never default to Spanish."
+          "You are an AI voice assistant. ALWAYS respond in English. Translate if needed, but reply only in English."
       })
     });
-
-    if (!r.ok) {
-      const errorText = await r.text();
-      console.error("❌ OpenAI API error:", r.status, r.statusText, errorText);
-      return res.status(r.status).json({ error: "OpenAI session failed", details: errorText });
-    }
 
     const data = await r.json();
     res.json({
@@ -39,17 +26,10 @@ app.post("/session", async (req, res) => {
       voice: "alloy"
     });
   } catch (e) {
-    console.error("❌ Session error:", e);
-    res.status(500).json({ error: "Session failed (server error)" });
+    console.error("Session error:", e);
+    res.status(500).json({ error: "session failed" });
   }
 });
 
-// Placeholder email endpoint
-app.post("/send-transcript", (req, res) => {
-  const { email, transcript } = req.body;
-  console.log(`📩 Transcript requested for ${email}:\n${transcript.join("\n")}`);
-  res.json({ success: true });
-});
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("✅ Server running on " + PORT));
+app.listen(PORT, () => console.log("Server running on " + PORT));
