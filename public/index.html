@@ -32,8 +32,19 @@
       answerEl.scrollTop = answerEl.scrollHeight;
     }
 
+    // Add/remove third ring when speaking starts/stops
     function setSpeaking(on) { 
       pttBtn.classList.toggle('speaking', on); 
+      if (on) {
+        if (!pttBtn.querySelector('.thirdRing')) {
+          const ring = document.createElement('span');
+          ring.className = 'thirdRing';
+          pttBtn.appendChild(ring);
+        }
+      } else {
+        const ring = pttBtn.querySelector('.thirdRing');
+        if (ring) ring.remove();
+      }
     }
 
     async function initRealtime() {
@@ -69,7 +80,7 @@
               clearTimeout(window._speakTimer);
               window._speakTimer = setTimeout(()=> {
                 setSpeaking(false);
-              }, 1000); // 1s grace
+              }, 1500); // 1.5s grace (matches slower pulse)
             }
 
             // 🟹 Halo OFF when speech ends
