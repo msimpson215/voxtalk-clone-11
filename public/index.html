@@ -63,7 +63,7 @@
               if (chunk) appendLine("ai", chunk);
             }
 
-            // 🔹 Halo ON when speech starts
+            // 🟹 Halo ON when speech starts
             if (evt.type === "response.audio_transcript.delta") {
               setSpeaking(true);
               clearTimeout(window._speakTimer);
@@ -72,7 +72,7 @@
               }, 1000); // 1s grace
             }
 
-            // 🔹 Halo OFF when speech ends
+            // 🟹 Halo OFF when speech ends
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
               setSpeaking(false);
               clearTimeout(window._speakTimer);
