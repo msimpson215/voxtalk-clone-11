@@ -1,7 +1,6 @@
 {
-  "name": "voxtalk-asr-test",
+  "name": "voxtalk-clone-11",
   "version": "1.0.0",
-  "type": "module",
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js"
