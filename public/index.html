@@ -56,28 +56,21 @@
         dc.onmessage = (e)=> {
           try {
             const evt = JSON.parse(e.data);
-            console.log("EVENT:", evt.type, evt);
-
+            // Only show halo when AI is speaking
             if (evt.type === "response.message.delta") {
               const chunk = evt.delta.map(d=>d.content?.[0]?.text||"").join("");
               if (chunk) appendLine("ai", chunk);
             }
-
-            // 🟹 Halo ON when speech starts
+            // Halo ON when VoxTalk starts talking
             if (evt.type === "response.audio_transcript.delta") {
               setSpeaking(true);
               clearTimeout(window._speakTimer);
-              window._speakTimer = setTimeout(()=> {
-                setSpeaking(false);
-              }, 1000); // 1s grace
             }
-
-            // 🟹 Halo OFF when speech ends
+            // Halo OFF when VoxTalk stops talking
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
               setSpeaking(false);
               clearTimeout(window._speakTimer);
             }
-
           } catch(err) {
             console.error("Parse error:", e.data, err);
           }
