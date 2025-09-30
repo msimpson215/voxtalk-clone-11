@@ -36,14 +36,24 @@
       pttBtn.classList.toggle('speaking', on); 
     }
 
+    // Store peer connection and mic track so we can reset them properly
+    let pc = null;
+    let micTrack = null;
+
     async function initRealtime() {
       try {
         const s = await fetch("/session", { method:"POST" });
         const { client_secret, model, voice } = await s.json();
 
-        const pc = new RTCPeerConnection();
+        // If previous connection exists, close it
+        if (pc) {
+          pc.close();
+          pc = null;
+        }
+
+        pc = new RTCPeerConnection();
         const mic = await navigator.mediaDevices.getUserMedia({ audio:true });
-        const micTrack = mic.getTracks()[0];
+        micTrack = mic.getTracks()[0];
         micTrack.enabled = false;
         pc.addTrack(micTrack, mic);
 
@@ -56,16 +66,19 @@
         dc.onmessage = (e)=> {
           try {
             const evt = JSON.parse(e.data);
-            // Only show halo when AI is speaking
+
+            // Show AI message
             if (evt.type === "response.message.delta") {
               const chunk = evt.delta.map(d=>d.content?.[0]?.text||"").join("");
               if (chunk) appendLine("ai", chunk);
             }
-            // Halo ON when VoxTalk starts talking
+
+            // Halo ON: VoxTalk starts speaking
             if (evt.type === "response.audio_transcript.delta") {
               setSpeaking(true);
             }
-            // Halo OFF when VoxTalk stops talking
+
+            // Halo OFF: VoxTalk stops speaking
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
               setSpeaking(false);
             }
@@ -74,12 +87,8 @@
           }
         };
 
-        // Fallback audio events
-        let firstPlay = true;
-        rtAudio.addEventListener("playing", ()=> {
-          if (firstPlay) { firstPlay = false; return; }
-          setSpeaking(true);
-        });
+        // Fallback for audio element events
+        rtAudio.addEventListener("playing", ()=> setSpeaking(true));
         rtAudio.addEventListener("pause", ()=> setSpeaking(false));
         rtAudio.addEventListener("ended", ()=> setSpeaking(false));
 
@@ -100,26 +109,49 @@
         const answer = { type:"answer", sdp: await r.text() };
         await pc.setRemoteDescription(answer);
 
-        let talking = false;
-        pttBtn.onclick = () => {
-          talking = !talking;
-          micTrack.enabled = talking;
-
-          if (talking) {
-            appendLine("me","(Listening...)");
-          } else {
-            setSpeaking(false);
-            rtAudio.pause();
-            rtAudio.currentTime = 0;
-            appendLine("me","(Stopped)");
-          }
-        };
-
       } catch(err) {
         console.error("Realtime init failed", err);
       }
     }
+
+    let listening = false;
+    pttBtn.onclick = () => {
+      listening = !listening;
+
+      if (micTrack) {
+        micTrack.enabled = listening;
+      }
+
+      if (listening) {
+        appendLine("me","(Listening...)");
+        setSpeaking(false); // Ensure halo is off until VoxTalk speaks
+      } else {
+        setSpeaking(false);
+        rtAudio.pause();
+        rtAudio.currentTime = 0;
+        appendLine("me","(Stopped)");
+      }
+    };
+
+    // When page loads, init connection
     initRealtime();
+
+    // Optional: When re-listening after stop, reset connection
+    // You could call initRealtime() every time you start listening if you want to completely reset things:
+    // pttBtn.onclick = () => {
+    //   listening = !listening;
+    //   if (listening) {
+    //     initRealtime();
+    //     appendLine("me","(Listening...)");
+    //     setSpeaking(false);
+    //   } else {
+    //     setSpeaking(false);
+    //     rtAudio.pause();
+    //     rtAudio.currentTime = 0;
+    //     appendLine("me","(Stopped)");
+    //   }
+    // };
+
   </script>
 </body>
 </html>
