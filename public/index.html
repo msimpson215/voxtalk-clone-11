@@ -47,7 +47,8 @@
 
     let pc = null;
     let micTrack = null;
-    let userTranscript = ""; // Accumulate user's transcript for each utterance
+    let userTranscript = "";
+    let aiTranscript = "";
 
     async function initRealtime() {
       try {
@@ -75,23 +76,28 @@
           try {
             const evt = JSON.parse(e.data);
 
-            // Accumulate user transcript (Whisper ASR)
+            // Buffer user speech transcript (Whisper ASR)
             if (evt.type === "response.audio_transcript.delta" && evt.delta) {
               userTranscript += evt.delta;
               setSpeaking(true);
             }
-            // When AI is done speaking, finalize user transcript
+
+            // Buffer AI message transcript
+            if (evt.type === "response.message.delta" && evt.delta) {
+              aiTranscript += evt.delta.map(d=>d.content?.[0]?.text||"").join("");
+            }
+
+            // When audio is done, print user's full utterance and AI's full response
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
               setSpeaking(false);
               if (userTranscript.trim()) {
                 appendLine("me", userTranscript.trim());
                 userTranscript = "";
               }
-            }
-            // Show AI response/message
-            if (evt.type === "response.message.delta") {
-              const chunk = evt.delta.map(d=>d.content?.[0]?.text||"").join("");
-              if (chunk) appendLine("ai", chunk);
+              if (aiTranscript.trim()) {
+                appendLine("ai", aiTranscript.trim());
+                aiTranscript = "";
+              }
             }
           } catch(err) {
             console.error("Parse error:", e.data, err);
@@ -128,6 +134,7 @@
         appendLine("me","(Listening...)");
         setSpeaking(false);
         userTranscript = "";
+        aiTranscript = "";
       } else {
         setSpeaking(false);
         rtAudio.pause();
@@ -135,6 +142,7 @@
         rtAudio.srcObject = null;
         appendLine("me","(Stopped)");
         userTranscript = "";
+        aiTranscript = "";
       }
     };
 
