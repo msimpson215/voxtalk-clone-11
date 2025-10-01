@@ -76,7 +76,7 @@
             const evt = JSON.parse(e.data);
             // Show real-time transcript of your speech (Whisper ASR)
             if (evt.type === "response.audio_transcript.delta" && evt.delta) {
-              const text = evt.delta.map(d=>d.text||"").join(" ");
+              const text = evt.delta; // <-- FIXED: it's a string for ASR
               transcriptEl.textContent = text;
               transcriptEl.classList.remove("muted");
             }
