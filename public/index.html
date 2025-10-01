@@ -13,33 +13,19 @@
     <h1>Talk to VoxTalk</h1>
     <button id="pttBtn" aria-pressed="false"></button>
     <div class="hint">Click to Talk</div>
-    <div id="answer"><div class="muted">Conversation will appear here.</div></div>
+    <!-- Conversation and transcript are NOT shown anymore -->
     <button id="printBtn" class="print-btn">🖨️ Print Conversation</button>
     <audio id="remote" autoplay playsinline></audio>
   </div>
   <script>
-    const pttBtn      = document.getElementById('pttBtn');
-    const answerEl    = document.getElementById('answer');
-    const rtAudio     = document.getElementById('remote');
-    const printBtn    = document.getElementById('printBtn');
+    const pttBtn   = document.getElementById('pttBtn');
+    const rtAudio  = document.getElementById('remote');
+    const printBtn = document.getElementById('printBtn');
 
-    // Auto-link URLs in AI responses and user messages
-    function linkify(text) {
-      return text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
-    }
-
-    // Append a line to the conversation
-    function appendLine(role, text) {
-      if (answerEl.querySelector('.muted')) answerEl.innerHTML = '';
-      const div = document.createElement('div');
-      div.className = 'line';
-      // Linkify URLs
-      const linkedText = linkify(text);
-      div.innerHTML = `<span class="${role}">${role==='me'?'You:':'AI:'}</span>
-                       <span class="text">${linkedText}</span>`;
-      answerEl.appendChild(div);
-      answerEl.scrollTop = answerEl.scrollHeight;
-    }
+    // Buffer for conversation lines (not displayed)
+    let conversation = [];
+    let userTranscript = "";
+    let aiTranscript = "";
 
     function setSpeaking(on) { 
       pttBtn.classList.toggle('speaking', on); 
@@ -47,8 +33,6 @@
 
     let pc = null;
     let micTrack = null;
-    let userTranscript = "";
-    let aiTranscript = "";
 
     async function initRealtime() {
       try {
@@ -87,15 +71,15 @@
               aiTranscript += evt.delta.map(d=>d.content?.[0]?.text||"").join("");
             }
 
-            // When audio is done, print user's full utterance and AI's full response
+            // When audio is done, save user's full utterance and AI's full response to buffer
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
               setSpeaking(false);
               if (userTranscript.trim()) {
-                appendLine("me", userTranscript.trim());
+                conversation.push("You: " + userTranscript.trim());
                 userTranscript = "";
               }
               if (aiTranscript.trim()) {
-                appendLine("ai", aiTranscript.trim());
+                conversation.push("AI: " + aiTranscript.trim());
                 aiTranscript = "";
               }
             }
@@ -130,17 +114,11 @@
     pttBtn.onclick = () => {
       listening = !listening;
       if (micTrack) micTrack.enabled = listening;
-      if (listening) {
-        appendLine("me","(Listening...)");
-        setSpeaking(false);
-        userTranscript = "";
-        aiTranscript = "";
-      } else {
+      if (!listening) {
         setSpeaking(false);
         rtAudio.pause();
         rtAudio.currentTime = 0;
         rtAudio.srcObject = null;
-        appendLine("me","(Stopped)");
         userTranscript = "";
         aiTranscript = "";
       }
@@ -148,10 +126,7 @@
 
     // Print conversation as plain text
     printBtn.onclick = () => {
-      let text = '';
-      answerEl.querySelectorAll('.line').forEach(line => {
-        text += line.textContent + '\n';
-      });
+      let text = conversation.join('\n');
       // Open print dialog with plain text
       const printWindow = window.open('', '', 'width=600,height=800');
       printWindow.document.write('<pre style="font-size:16px;">' + text + '</pre>');
