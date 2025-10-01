@@ -13,7 +13,7 @@
     <h1>Talk to VoxTalk</h1>
     <button id="pttBtn" aria-pressed="false"></button>
     <div class="hint">Click to Talk</div>
-    <!-- Conversation and transcript are NOT shown anymore -->
+    <!-- No transcript or conversation output during session -->
     <button id="printBtn" class="print-btn">🖨️ Print Conversation</button>
     <audio id="remote" autoplay playsinline></audio>
   </div>
@@ -22,7 +22,7 @@
     const rtAudio  = document.getElementById('remote');
     const printBtn = document.getElementById('printBtn');
 
-    // Buffer for conversation lines (not displayed)
+    // Buffer for conversation lines (not displayed during session)
     let conversation = [];
     let userTranscript = "";
     let aiTranscript = "";
@@ -60,7 +60,7 @@
           try {
             const evt = JSON.parse(e.data);
 
-            // Buffer user speech transcript (Whisper ASR)
+            // Buffer user speech transcript
             if (evt.type === "response.audio_transcript.delta" && evt.delta) {
               userTranscript += evt.delta;
               setSpeaking(true);
@@ -71,7 +71,7 @@
               aiTranscript += evt.delta.map(d=>d.content?.[0]?.text||"").join("");
             }
 
-            // When audio is done, save user's full utterance and AI's full response to buffer
+            // When audio is done, save utterances to buffer for printing only
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
               setSpeaking(false);
               if (userTranscript.trim()) {
