@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <title>VoxTalk (Soothing Radiance)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,20 +13,31 @@
     <h1>Talk to VoxTalk</h1>
     <button id="pttBtn" aria-pressed="false"></button>
     <div class="hint">Click to Talk</div>
+    <div id="transcript" class="transcript muted">(Your speech will appear here as you talk)</div>
     <div id="answer"><div class="muted">Conversation will appear here.</div></div>
     <audio id="remote" autoplay playsinline></audio>
   </div>
-  <script>
-    const pttBtn   = document.getElementById('pttBtn');
-    const answerEl = document.getElementById('answer');
-    const rtAudio  = document.getElementById('remote');
 
+  <script>
+    const pttBtn      = document.getElementById('pttBtn');
+    const answerEl    = document.getElementById('answer');
+    const transcriptEl= document.getElementById('transcript');
+    const rtAudio     = document.getElementById('remote');
+
+    // Auto-link URLs in AI responses and user messages
+    function linkify(text) {
+      return text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+    }
+
+    // Append a line to the conversation
     function appendLine(role, text) {
       if (answerEl.querySelector('.muted')) answerEl.innerHTML = '';
       const div = document.createElement('div');
       div.className = 'line';
+      // Linkify URLs
+      const linkedText = linkify(text);
       div.innerHTML = `<span class="${role}">${role==='me'?'You:':'AI:'}</span>
-                       <span class="text">${text}</span>`;
+                       <span class="text">${linkedText}</span>`;
       answerEl.appendChild(div);
       answerEl.scrollTop = answerEl.scrollHeight;
     }
@@ -62,16 +74,26 @@
         dc.onmessage = (e)=> {
           try {
             const evt = JSON.parse(e.data);
-
+            // Show real-time transcript of your speech (Whisper ASR)
+            if (evt.type === "response.audio_transcript.delta" && evt.delta) {
+              const text = evt.delta.map(d=>d.text||"").join(" ");
+              transcriptEl.textContent = text;
+              transcriptEl.classList.remove("muted");
+            }
+            // Show AI response/message
             if (evt.type === "response.message.delta") {
               const chunk = evt.delta.map(d=>d.content?.[0]?.text||"").join("");
               if (chunk) appendLine("ai", chunk);
             }
+            // Halo ON when VoxTalk starts speaking
             if (evt.type === "response.audio_transcript.delta") {
               setSpeaking(true);
             }
+            // Halo OFF when VoxTalk stops speaking
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
               setSpeaking(false);
+              transcriptEl.textContent = "(Your speech will appear here as you talk)";
+              transcriptEl.classList.add("muted");
             }
           } catch(err) {
             console.error("Parse error:", e.data, err);
@@ -113,6 +135,8 @@
         rtAudio.currentTime = 0;
         rtAudio.srcObject = null;
         appendLine("me","(Stopped)");
+        transcriptEl.textContent = "(Your speech will appear here as you talk)";
+        transcriptEl.classList.add("muted");
       }
     };
 
