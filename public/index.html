@@ -99,7 +99,7 @@
           try {
             const evt = JSON.parse(e.data);
 
-            // Buffer user speech transcript (Whisper ASR)
+            // Buffer user speech transcript (no rings here)
             if (evt.type === "response.audio_transcript.delta" && evt.delta) {
               userTranscript += evt.delta;
             }
@@ -109,14 +109,14 @@
               aiTranscript += evt.delta.map(d=>d.content?.[0]?.text||"").join("");
             }
 
-            // 🔹 AI is actively speaking → halo ON
-            if (evt.type === "response.audio.delta" || evt.type === "response.audio.started") {
+            // 🔹 AI started speaking → rings ON
+            if (evt.type === "response.audio.started") {
               setSpeaking(true);
             }
 
-            // 🔹 AI finished speaking → halo OFF + flush transcripts
+            // 🔹 AI finished speaking → rings OFF after short linger
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
-              setSpeaking(false);
+              setTimeout(() => setSpeaking(false), 2000); // 2s linger
               if (userTranscript.trim()) {
                 conversationLines.push({role:"user", text:userTranscript.trim()});
                 userTranscript = "";
