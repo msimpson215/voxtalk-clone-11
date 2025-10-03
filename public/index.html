@@ -13,22 +13,63 @@
     <h1>Talk to VoxTalk</h1>
     <button id="pttBtn" aria-pressed="false"></button>
     <div class="hint">Click to Talk</div>
-    <!-- No transcript or conversation output during session -->
     <button id="printBtn" class="print-btn">🖨️ Print Conversation</button>
     <audio id="remote" autoplay playsinline></audio>
   </div>
+
+  <!-- Hidden conversation panel, revealed on Print Conversation -->
+  <div id="conversation-panel" style="display:none;">
+    <div id="conversation"></div>
+  </div>
+
+  <!-- Spotlight product card, use as needed -->
+  <div id="spotlight-card"></div>
+
   <script>
     const pttBtn   = document.getElementById('pttBtn');
     const rtAudio  = document.getElementById('remote');
     const printBtn = document.getElementById('printBtn');
+    const conversationPanel = document.getElementById('conversation-panel');
+    const conversationDiv = document.getElementById('conversation');
+    const spotlightCard = document.getElementById('spotlight-card');
 
-    // Buffer for conversation lines (not displayed during session)
-    let conversation = [];
+    // Buffer for conversation lines
+    let conversationLines = [];
     let userTranscript = "";
     let aiTranscript = "";
 
     function setSpeaking(on) { 
       pttBtn.classList.toggle('speaking', on); 
+    }
+
+    // Show conversation in panel and open print dialog
+    function printConversation() {
+      conversationDiv.innerHTML = "";
+      conversationLines.forEach(line => {
+        const div = document.createElement("div");
+        div.textContent = (line.role === "user" ? "You: " : "VoxTalk: ") + line.text;
+        conversationDiv.appendChild(div);
+      });
+      conversationPanel.style.display = "block";
+      setTimeout(() => {
+        window.print();
+        // Optionally hide panel after print:
+        conversationPanel.style.display = "none";
+      }, 250);
+    }
+
+    // Spotlight card for product info (call as needed)
+    function showProduct(name, price, imageUrl, linkUrl) {
+      spotlightCard.innerHTML = `
+        <img src="${imageUrl}" alt="${name}">
+        <div class="info">
+          <h3>${name}</h3>
+          <p>Price: ${price}</p>
+          <a href="${linkUrl}" target="_blank">View Product</a>
+          <a href="${linkUrl}?add-to-cart=1" target="_blank">Add to Cart</a>
+        </div>
+      `;
+      spotlightCard.classList.add("visible");
     }
 
     let pc = null;
@@ -60,7 +101,7 @@
           try {
             const evt = JSON.parse(e.data);
 
-            // Buffer user speech transcript
+            // Buffer user speech transcript (Whisper ASR)
             if (evt.type === "response.audio_transcript.delta" && evt.delta) {
               userTranscript += evt.delta;
               setSpeaking(true);
@@ -71,15 +112,15 @@
               aiTranscript += evt.delta.map(d=>d.content?.[0]?.text||"").join("");
             }
 
-            // When audio is done, save utterances to buffer for printing only
+            // When audio is done, buffer utterances for printing
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
               setSpeaking(false);
               if (userTranscript.trim()) {
-                conversation.push("You: " + userTranscript.trim());
+                conversationLines.push({role:"user", text:userTranscript.trim()});
                 userTranscript = "";
               }
               if (aiTranscript.trim()) {
-                conversation.push("AI: " + aiTranscript.trim());
+                conversationLines.push({role:"ai", text:aiTranscript.trim()});
                 aiTranscript = "";
               }
             }
@@ -124,18 +165,12 @@
       }
     };
 
-    // Print conversation as plain text
-    printBtn.onclick = () => {
-      let text = conversation.join('\n');
-      // Open print dialog with plain text
-      const printWindow = window.open('', '', 'width=600,height=800');
-      printWindow.document.write('<pre style="font-size:16px;">' + text + '</pre>');
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
-    };
+    printBtn.onclick = printConversation;
 
     initRealtime();
+
+    // Demo: Show a product spotlight card
+    // showProduct("Corvette C7 Headlight Assembly", "$899.99", "https://example.com/corvette-headlight.jpg", "https://example.com/product/c7-headlight");
   </script>
 </body>
 </html>
