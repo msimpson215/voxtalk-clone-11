@@ -13,17 +13,19 @@
     <h1>Talk to VoxTalk</h1>
     <button id="pttBtn" aria-pressed="false"></button>
     <div class="hint">Click to Talk</div>
-    <button id="printBtn" class="print-btn">🖨️ Print Conversation</button>
     <audio id="remote" autoplay playsinline></audio>
   </div>
 
-  <!-- Hidden conversation panel, revealed on Print Conversation -->
+  <!-- Hidden conversation panel -->
   <div id="conversation-panel" style="display:none;">
     <div id="conversation"></div>
   </div>
 
-  <!-- Spotlight product card, use as needed -->
+  <!-- Spotlight product card -->
   <div id="spotlight-card"></div>
+
+  <!-- Print button fixed lower-left -->
+  <button id="printBtn">🖨️ Print Conversation</button>
 
   <script>
     const pttBtn   = document.getElementById('pttBtn');
@@ -33,7 +35,6 @@
     const conversationDiv = document.getElementById('conversation');
     const spotlightCard = document.getElementById('spotlight-card');
 
-    // Buffer for conversation lines
     let conversationLines = [];
     let userTranscript = "";
     let aiTranscript = "";
@@ -42,7 +43,6 @@
       pttBtn.classList.toggle('speaking', on); 
     }
 
-    // Show conversation in panel and open print dialog
     function printConversation() {
       conversationDiv.innerHTML = "";
       conversationLines.forEach(line => {
@@ -53,12 +53,10 @@
       conversationPanel.style.display = "block";
       setTimeout(() => {
         window.print();
-        // Optionally hide panel after print:
         conversationPanel.style.display = "none";
       }, 250);
     }
 
-    // Spotlight card for product info (call as needed)
     function showProduct(name, price, imageUrl, linkUrl) {
       spotlightCard.innerHTML = `
         <img src="${imageUrl}" alt="${name}">
@@ -104,7 +102,6 @@
             // Buffer user speech transcript (Whisper ASR)
             if (evt.type === "response.audio_transcript.delta" && evt.delta) {
               userTranscript += evt.delta;
-              setSpeaking(true);
             }
 
             // Buffer AI message transcript
@@ -112,7 +109,12 @@
               aiTranscript += evt.delta.map(d=>d.content?.[0]?.text||"").join("");
             }
 
-            // When audio is done, buffer utterances for printing
+            // 🔹 AI is actively speaking → halo ON
+            if (evt.type === "response.audio.delta" || evt.type === "response.audio.started") {
+              setSpeaking(true);
+            }
+
+            // 🔹 AI finished speaking → halo OFF + flush transcripts
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
               setSpeaking(false);
               if (userTranscript.trim()) {
@@ -168,9 +170,6 @@
     printBtn.onclick = printConversation;
 
     initRealtime();
-
-    // Demo: Show a product spotlight card
-    // showProduct("Corvette C7 Headlight Assembly", "$899.99", "https://example.com/corvette-headlight.jpg", "https://example.com/product/c7-headlight");
   </script>
 </body>
 </html>
