@@ -63,3 +63,71 @@ h1 { margin:6px 0; font-size:22px; }
   70%  { transform: scale(1.35); opacity: 0; }
   100% { transform: scale(1); opacity: 0; }
 }
+
+#conversation-panel {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 280px;
+  max-height: 60vh;
+  overflow-y: auto;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 0.9em;
+  z-index: 100;
+}
+
+#spotlight-card {
+  position: fixed;
+  bottom: 50%;
+  right: 10%;
+  transform: translateY(50%);
+  width: 340px;
+  background: rgba(255,255,255,0.95);
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.3);
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.4s ease-in-out;
+  z-index: 101;
+}
+
+#spotlight-card.visible { opacity: 1; }
+
+#spotlight-card img {
+  width: 100%;
+  display: block;
+}
+
+#spotlight-card .info {
+  padding: 12px;
+  text-align: center;
+}
+
+#spotlight-card .info h3 {
+  margin: 0 0 5px 0;
+  font-size: 1.1em;
+}
+
+#spotlight-card .info p {
+  margin: 4px 0;
+  font-size: 0.95em;
+}
+
+#spotlight-card .info a {
+  display: inline-block;
+  margin: 6px;
+  padding: 6px 12px;
+  background: #0077cc;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.9em;
+}
+
+#spotlight-card .info a:hover {
+  background: #005fa3;
+}
