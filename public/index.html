@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk (Event-Driven Halo, Logic Flipped)</title>
+  <title>VoxTalk (Halo FIXED)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
@@ -28,7 +28,7 @@
     const conversationDiv = document.getElementById('conversation');
     const spotlightCard = document.getElementById('spotlight-card');
 
-    // Halo OFF on page load. CRITICAL!
+    // Halo OFF on page load. This is CRITICAL!
     pttBtn.classList.remove('speaking');
 
     let conversationLines = [];
@@ -38,9 +38,9 @@
 
     function setAIPulsing(on) {
       if (on) {
-        pttBtn.classList.add('speaking');
+        pttBtn.classList.add('speaking');   // Halo ON
       } else {
-        pttBtn.classList.remove('speaking');
+        pttBtn.classList.remove('speaking'); // Halo OFF
       }
     }
 
@@ -84,7 +84,7 @@
       }
     };
 
-    // Halo OFF when AI stops speaking (audio ends)
+    // Halo OFF when AI finishes (audio ends)
     rtAudio.onended = () => {
       setAIPulsing(false); // Halo OFF
     };
@@ -124,11 +124,11 @@
 
             // Halo ON when AI starts
             if (evt.type === "response.audio.started") {
-              setAIPulsing(true);
+              setAIPulsing(true); // Halo ON
             }
             // Halo OFF when AI finishes
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
-              setAIPulsing(false);
+              setAIPulsing(false); // Halo OFF
               if (userTranscript.trim()) {
                 conversationLines.push({ role: "user", text: userTranscript.trim() });
                 userTranscript = "";
