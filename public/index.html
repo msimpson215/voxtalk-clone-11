@@ -32,32 +32,22 @@ const spotlightCard = document.getElementById('spotlight-card');
 let conversationLines = [];
 let userTranscript = "";
 let aiTranscript = "";
-let listening = false; // Tracks if the USER's mic is on
+let listening = false; 
 
-// State and Timer for Pulsing Logic
-let pulsingTimeout = null;
-let isAITalking = false; // Tracks if the AI is actively playing audio or in the 15s "hold" window
+// State: Only tracks if the AI has started playing audio.
+let isAITalking = false; 
 
 function setAIPulsing(on) {
-    // Clear any existing timer
-    if (pulsingTimeout) {
-        clearTimeout(pulsingTimeout);
-        pulsingTimeout = null;
-    }
-
     if (on) {
-        // AI START: Add the class immediately
-        pttBtn.classList.add('speaking');
-        isAITalking = true;
+        // AI START: Check if the user is NOT actively pressing the button (mic on)
+        if (pttBtn.getAttribute('aria-pressed') !== 'true') {
+            pttBtn.classList.add('speaking');
+            isAITalking = true;
+        }
     } else {
-        // AI END: Remove the class after a 15-second delay (the "alive" window)
-        const ALIVE_WINDOW_MS = 15000; 
-
-        // Set the timer to remove the 'speaking' class
-        pulsingTimeout = setTimeout(() => {
-            pttBtn.classList.remove('speaking');
-            isAITalking = false;
-        }, ALIVE_WINDOW_MS);
+        // AI END: Remove the class instantly (no 15-second hold)
+        pttBtn.classList.remove('speaking');
+        isAITalking = false;
     }
 }
 
@@ -93,13 +83,13 @@ let micTrack = null;
 
 // CRITICAL START HOOK: Use the audio element's "playing" event
 rtAudio.onplaying = () => {
-    // 1. Start the ring for the AI.
+    // START the pulse the moment audio begins.
     if (!isAITalking) { 
         console.log("AUDIO ELEMENT PLAYING: Starting Pulse!");
         setAIPulsing(true);
     }
     
-    // 2. CRITICAL for PTT: If the AI is talking, the user cannot be.
+    // Ensure user mic is OFF if the AI is talking (interruptibility)
     if (listening) {
         listening = false;
         if (micTrack) micTrack.enabled = false;
@@ -144,10 +134,10 @@ async function initRealtime() {
                     aiTranscript += evt.delta.map(d => d.content?.[0]?.text || "").join("");
                 }
 
-                // AI END HOOK: Use the confirmed end of the AI audio stream to start the 15s timer
+                // AI END HOOK: Use the confirmed end of the AI audio stream to stop the pulse
                 if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
                     setAIPulsing(false); 
-                    console.log("AI Audio Done. Starting 15s hold timer.");
+                    console.log("AI Audio Done. Stopping Pulse.");
 
                     // Finalize and buffer transcripts for printing
                     if (userTranscript.trim()) {
@@ -198,21 +188,16 @@ pttBtn.onclick = () => {
         // User starts speaking (PTT ON)
         console.log("PTT Button Clicked ON. Mic enabled.");
 
-        // 1. Immediately kill any AI pulsing/hold window.
-        if (pulsingTimeout) {
-            clearTimeout(pulsingTimeout);
-            pulsingTimeout = null;
-        }
-        pttBtn.classList.remove('speaking');
-        isAITalking = false;
+        // Immediately kill the AI pulse and set the user's state.
+        setAIPulsing(false);
         
-        // 2. Set button state visually
+        // Set button state visually
         pttBtn.setAttribute('aria-pressed', 'true');
         
     } else {
         // User stops speaking (PTT OFF)
         console.log("PTT Button Clicked OFF. Mic disabled.");
-
+        
         // Reset audio for cleanup
         rtAudio.pause();
         rtAudio.currentTime = 0;
@@ -224,6 +209,8 @@ pttBtn.onclick = () => {
 };
 
 printBtn.onclick = printConversation;
+// Immediately attempt to hide the pulse on initial load/connection
+setAIPulsing(false); 
 initRealtime();
 </script>
 </body>
