@@ -1,1 +1,11 @@
-
+service:
+  name: voxtalk-clone-11
+  env: .env
+  region: oregon
+  plan: free
+  build:
+    command: npm install
+    config:
+      static:
+        public: public
+        index: index.html
