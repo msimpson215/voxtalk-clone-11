@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk (Halo FIXED)</title>
+  <title>VoxTalk (Halo Corrected)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
@@ -21,27 +21,27 @@
   </div>
   <div id="spotlight-card"></div>
   <script>
+    // 1. HALO OFF at page load (guaranteed)
     const pttBtn = document.getElementById('pttBtn');
+    pttBtn.classList.remove('speaking');
+
     const rtAudio = document.getElementById('remote');
     const printBtn = document.getElementById('printBtn');
     const conversationPanel = document.getElementById('conversation-panel');
     const conversationDiv = document.getElementById('conversation');
     const spotlightCard = document.getElementById('spotlight-card');
 
-    // Halo OFF on page load
-    pttBtn.classList.remove('speaking');
-
     let conversationLines = [];
     let userTranscript = "";
     let aiTranscript = "";
     let listening = false;
 
+    // Only this function should ever touch the halo.
     function setAIPulsing(on) {
-      console.log("setAIPulsing called with:", on); // Debugging
       if (on) {
-        pttBtn.classList.add('speaking');   // Halo ON
+        pttBtn.classList.add('speaking');   // HALO ON
       } else {
-        pttBtn.classList.remove('speaking'); // Halo OFF
+        pttBtn.classList.remove('speaking'); // HALO OFF
       }
     }
 
@@ -75,10 +75,10 @@
     let pc = null;
     let micTrack = null;
 
-    // Halo ON when AI starts speaking (audio plays)
+    // 2. HALO ON ONLY when AI starts speaking
     rtAudio.onplaying = () => {
-      console.log("rtAudio.onplaying: AI starts speaking, HALO ON");
-      setAIPulsing(true); // Halo ON
+      setAIPulsing(true); // HALO ON
+      // If user was talking, turn off mic
       if (listening) {
         listening = false;
         if (micTrack) micTrack.enabled = false;
@@ -86,10 +86,9 @@
       }
     };
 
-    // Halo OFF when AI finishes (audio ends)
+    // 3. HALO OFF when AI finishes
     rtAudio.onended = () => {
-      console.log("rtAudio.onended: AI stops speaking, HALO OFF");
-      setAIPulsing(false); // Halo OFF
+      setAIPulsing(false); // HALO OFF
     };
 
     async function initRealtime() {
@@ -113,11 +112,11 @@
           rtAudio.play().catch(()=>{});
         };
 
+        // 4. HALO ON/OFF ONLY via AI events
         const dc = pc.createDataChannel("events");
         dc.onmessage = (e) => {
           try {
             const evt = JSON.parse(e.data);
-            console.log("AI Event:", evt.type);
 
             if (evt.type === "response.audio_transcript.delta" && evt.delta) {
               userTranscript += evt.delta;
@@ -126,15 +125,13 @@
               aiTranscript += evt.delta.map(d => d.content?.[0]?.text || "").join("");
             }
 
-            // Halo ON when AI starts
+            // HALO ON when AI starts
             if (evt.type === "response.audio.started") {
-              console.log("AI should start HALO");
-              setAIPulsing(true); // Halo ON
+              setAIPulsing(true); // HALO ON
             }
-            // Halo OFF when AI finishes
+            // HALO OFF when AI finishes
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
-              console.log("AI should stop HALO");
-              setAIPulsing(false); // Halo OFF
+              setAIPulsing(false); // HALO OFF
               if (userTranscript.trim()) {
                 conversationLines.push({ role: "user", text: userTranscript.trim() });
                 userTranscript = "";
@@ -172,7 +169,7 @@
       }
     }
 
-    // PTT button logic: ONLY controls mic, NEVER toggles halo!
+    // 5. PTT only controls mic, NEVER touches HALO
     pttBtn.onclick = () => {
       listening = !listening;
       if (micTrack) micTrack.enabled = listening;
