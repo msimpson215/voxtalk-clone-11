@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk (Event-Driven Halo)</title>
+  <title>VoxTalk (Event-Driven Halo, Logic Flipped)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
@@ -28,7 +28,7 @@
     const conversationDiv = document.getElementById('conversation');
     const spotlightCard = document.getElementById('spotlight-card');
 
-    // Ensure halo is OFF when the page loads
+    // Halo OFF on page load. CRITICAL!
     pttBtn.classList.remove('speaking');
 
     let conversationLines = [];
@@ -74,6 +74,7 @@
     let pc = null;
     let micTrack = null;
 
+    // Halo ON when AI starts speaking (audio plays)
     rtAudio.onplaying = () => {
       setAIPulsing(true); // Halo ON
       if (listening) {
@@ -83,6 +84,7 @@
       }
     };
 
+    // Halo OFF when AI stops speaking (audio ends)
     rtAudio.onended = () => {
       setAIPulsing(false); // Halo OFF
     };
@@ -164,7 +166,7 @@
       }
     }
 
-    // PTT button logic (User Input Control ONLY; does NOT touch halo)
+    // PTT button logic: ONLY controls mic, NEVER toggles halo!
     pttBtn.onclick = () => {
       listening = !listening;
       if (micTrack) micTrack.enabled = listening;
