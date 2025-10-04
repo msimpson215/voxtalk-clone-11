@@ -34,28 +34,22 @@ let userTranscript = "";
 let aiTranscript = "";
 let listening = false; 
 
-// State and Timer for Pulsing Logic
+// State and Timer for Pulsing Logic (still needed for cleanup)
 let pulsingTimeout = null;
 let isAITalking = false; 
 
 function setAIPulsing(on) {
-    // Clear any existing timer
+    // This function is included but is NOT used by the PTT button in this test mode.
     if (pulsingTimeout) {
         clearTimeout(pulsingTimeout);
         pulsingTimeout = null;
     }
 
     if (on) {
-        // START the pulse immediately
-        pttBtn.classList.add('speaking');
         isAITalking = true;
     } else {
-        // STOP the pulse after a 15-second delay (the "alive" window)
         const ALIVE_WINDOW_MS = 15000; 
-
-        // Set the timer to remove the 'speaking' class
         pulsingTimeout = setTimeout(() => {
-            pttBtn.classList.remove('speaking');
             isAITalking = false;
         }, ALIVE_WINDOW_MS);
     }
@@ -117,26 +111,20 @@ async function initRealtime() {
             try {
                 const evt = JSON.parse(e.data);
 
+                // NOTE: AI PULSING LOGIC BYPASSED FOR THIS TEST
+                
                 // Buffer user speech transcript
                 if (evt.type === "response.audio_transcript.delta" && evt.delta) {
                     userTranscript += evt.delta;
                 }
-
-                // AI START HOOK: Use the first piece of text from the AI to start the pulse
-                if (evt.type === "response.message.delta" && evt.delta && !isAITalking) {
-                    setAIPulsing(true); 
-                }
-
+                
                 // Buffer AI message transcript
                 if (evt.type === "response.message.delta" && evt.delta) {
                     aiTranscript += evt.delta.map(d => d.content?.[0]?.text || "").join("");
                 }
 
-                // AI END HOOK: Use the confirmed end of the AI audio stream to start the 15s timer
+                // Finalize and buffer transcripts for printing
                 if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
-                    setAIPulsing(false); 
-
-                    // Finalize and buffer transcripts for printing
                     if (userTranscript.trim()) {
                         conversationLines.push({ role: "user", text: userTranscript.trim() });
                         userTranscript = "";
@@ -174,40 +162,38 @@ async function initRealtime() {
     }
 }
 
-// PTT button logic (CLEAN START/STOP)
-// This is now purely for microphone control and state cleanup.
+// PTT button logic (SIMPLE CSS TEST MODE)
+// This is the CRITICAL part for this test.
 pttBtn.onclick = () => {
     listening = !listening;
     if (micTrack) micTrack.enabled = listening;
 
-    // When we stop listening (mic off), kill all visual state immediately
+    if (listening) {
+        // FORCES THE HALO ON WHEN YOU CLICK THE BUTTON
+        pttBtn.classList.add('speaking');
+    }
+
     if (!listening) {
+        // FORCES THE HALO OFF WHEN YOU CLICK THE BUTTON AGAIN
+        pttBtn.classList.remove('speaking');
+        
+        // Clear audio and transcripts
         if (pulsingTimeout) {
             clearTimeout(pulsingTimeout);
             pulsingTimeout = null;
         }
-        pttBtn.classList.remove('speaking');
         isAITalking = false;
-        
-        // Clear audio and transcripts
         rtAudio.pause();
         rtAudio.currentTime = 0;
         rtAudio.srcObject = null;
         userTranscript = "";
         aiTranscript = "";
     }
-    
-    // FIX for the issue where it wouldn't start again:
-    // If we transition from !listening to listening, we need to re-init the connection
-    // to ensure a fresh session if the old one was closed. 
-    // However, the core issue of not starting after a successful session often comes from the 
-    // audio/mic state not being cleaned up, which the code above handles.
-    // If the full app restart is needed after a full session, it usually indicates a deeper API/WebRTC constraint, 
-    // but the clean state management above is the best code solution.
 };
 
 printBtn.onclick = printConversation;
 initRealtime();
+// showProduct("Corvette C7 Headlight Assembly", "$899.99", "https://example.com/corvette-headlight.jpg", "https://example.com/product/c7-headlight");
 </script>
 </body>
 </html>
