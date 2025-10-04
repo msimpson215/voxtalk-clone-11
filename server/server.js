@@ -22,6 +22,11 @@ app.post("/session", async (req, res) => {
     });
 
     const data = await r.json();
+    if (!data.client_secret) {
+      console.error("Realtime session error:", data);
+      return res.status(500).json({ error: "No client_secret returned", details: data });
+    }
+
     res.json({
       client_secret: data.client_secret,
       model: "gpt-4o-realtime-preview",
