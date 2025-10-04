@@ -34,36 +34,7 @@ let userTranscript = "";
 let aiTranscript = "";
 let listening = false; 
 
-// Timer variable for the pulsing "alive" window
-let pulsingTimeout = null;
-let isAITalking = false; // Flag to track when the AI is actively speaking
-
-function setAIPulsing(on) {
-    // Clear any existing timer when called
-    if (pulsingTimeout) {
-        clearTimeout(pulsingTimeout);
-        pulsingTimeout = null;
-    }
-
-    if (on) {
-        // 1. START the pulse immediately
-        pttBtn.classList.add('speaking');
-        isAITalking = true;
-    } else {
-        // 2. STOP the pulse after a 15-second delay
-        
-        // Define the delay (15,000 milliseconds = 15 seconds)
-        const ALIVE_WINDOW_MS = 15000; 
-
-        // Set the timer to remove the 'speaking' class
-        pulsingTimeout = setTimeout(() => {
-            pttBtn.classList.remove('speaking');
-            isAITalking = false;
-        }, ALIVE_WINDOW_MS);
-    }
-}
-
-// Show conversation in panel and open print dialog
+// --- Functions (Unchanged) ---
 function printConversation() {
     conversationDiv.innerHTML = "";
     conversationLines.forEach(line => {
@@ -74,12 +45,10 @@ function printConversation() {
     conversationPanel.style.display = "block";
     setTimeout(() => {
         window.print();
-        // Optionally hide panel after print:
         conversationPanel.style.display = "none";
     }, 250);
 }
 
-// Spotlight card for product info (call as needed)
 function showProduct(name, price, imageUrl, linkUrl) {
     spotlightCard.innerHTML = `
         <img src="${imageUrl}" alt="${name}">
@@ -122,14 +91,11 @@ async function initRealtime() {
             try {
                 const evt = JSON.parse(e.data);
 
+                // --- NOTE: AI PULSING LOGIC IS REMOVED HERE FOR TESTING ---
+                
                 // Buffer user speech transcript (Whisper ASR)
                 if (evt.type === "response.audio_transcript.delta" && evt.delta) {
                     userTranscript += evt.delta;
-                }
-
-                // AI starts generating a message/audio: START the pulse immediately
-                if (evt.type === "response.message.delta" && evt.delta && !isAITalking) {
-                    setAIPulsing(true); // START the pulse (clears any old timer)
                 }
 
                 // Buffer AI message transcript
@@ -137,11 +103,8 @@ async function initRealtime() {
                     aiTranscript += evt.delta.map(d => d.content?.[0]?.text || "").join("");
                 }
 
-                // AI audio output is complete: START the 15-second countdown
+                // Finalize and buffer transcripts for printing
                 if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
-                    setAIPulsing(false); // START the timer for the "alive" window
-
-                    // Finalize and buffer transcripts for printing
                     if (userTranscript.trim()) {
                         conversationLines.push({ role: "user", text: userTranscript.trim() });
                         userTranscript = "";
@@ -179,19 +142,19 @@ async function initRealtime() {
     }
 }
 
-// PTT button logic
+// --- MODIFIED PTT button logic (FOR TESTING CSS) ---
 pttBtn.onclick = () => {
     listening = !listening;
     if (micTrack) micTrack.enabled = listening;
 
+    if (listening) {
+        // FORCING THE PULSING CLASS ON when the user clicks the button ON
+        pttBtn.classList.add('speaking');
+    }
+
     if (!listening) {
-        // When the user stops listening, ensure the pulsing is stopped immediately
-        if (pulsingTimeout) {
-            clearTimeout(pulsingTimeout);
-            pulsingTimeout = null;
-        }
+        // FORCING THE PULSING CLASS OFF when the user clicks the button OFF
         pttBtn.classList.remove('speaking');
-        isAITalking = false;
         
         // Clear audio and transcripts
         rtAudio.pause();
@@ -204,7 +167,6 @@ pttBtn.onclick = () => {
 
 printBtn.onclick = printConversation;
 initRealtime();
-// Demo: Show a product spotlight card
 // showProduct("Corvette C7 Headlight Assembly", "$899.99", "https://example.com/corvette-headlight.jpg", "https://example.com/product/c7-headlight");
 </script>
 </body>
