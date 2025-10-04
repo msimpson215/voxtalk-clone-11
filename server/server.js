@@ -7,8 +7,13 @@ require('dotenv').config();
 const app = express();
 const server = http.createServer(app);
 
-// Serve static files
+// Serve static files from public directory
 app.use(express.static(path.join(__dirname, '../public')));
+
+// Serve index.html for all other routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public', 'index.html'));
+});
 
 // Create WebSocket server
 const wss = new WebSocket.Server({ server });
@@ -16,22 +21,7 @@ const wss = new WebSocket.Server({ server });
 // Handle WebSocket connections
 wss.on('connection', (ws) => {
     console.log('Client connected');
-
-    ws.on('message', (data) => {
-        // Handle audio data from client
-        if (data instanceof Buffer) {
-            // Process audio data here
-            console.log('Received audio data:', data.length);
-            ws.send(JSON.stringify({
-                type: 'vad',
-                status: 'active'
-            }));
-        }
-    });
-
-    ws.on('close', () => {
-        console.log('Client disconnected');
-    });
+    // ... rest of your WebSocket code
 });
 
 // Start server
