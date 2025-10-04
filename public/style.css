@@ -7,7 +7,7 @@ background: radial-gradient(circle at 50% 20%, #dbeafe, #93c5fd 40%, #1e3a8a 90%
 .demo-label { font-size:12px; color:#111; margin-bottom:4px; }
 h1 { margin:6px 0; font-size:22px; }
 
-/* FIX: Print button positioned fixed to the lower-left viewport corner */
+/* Print button positioned fixed to the lower-left viewport corner */
 #printBtn {
 position: fixed;
 left: 20px;
@@ -27,8 +27,8 @@ width:120px; height:120px; border-radius:50%; border:none; cursor:pointer;
 background: radial-gradient(circle at 30% 30%, #3b82f6, #1e40af);
 box-shadow:0 6px 18px rgba(37,99,235,.3);
 transition: transform 0.15s ease, box-shadow 0.3s ease;
-position: relative; /* CRITICAL for halos to work */
-overflow: visible; /* CRITICAL for halos to work */
+position: relative; 
+overflow: visible; 
 }
 #pttBtn:hover { transform: scale(1.02); }
 #pttBtn:active { transform: scale(0.95); }
