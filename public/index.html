@@ -71,7 +71,6 @@
     let pc = null;
     let micTrack = null;
 
-    // Halo ON when AI audio is playing
     rtAudio.onplaying = () => {
       setAIPulsing(true);
       if (listening) {
@@ -80,7 +79,6 @@
         pttBtn.setAttribute('aria-pressed', 'false');
       }
     };
-    // Halo OFF when AI audio ends
     rtAudio.onended = () => {
       setAIPulsing(false);
     };
@@ -168,7 +166,6 @@
       listening = !listening;
       if (micTrack) micTrack.enabled = listening;
       if (listening) {
-        setAIPulsing(false);
         pttBtn.setAttribute('aria-pressed', 'true');
       } else {
         rtAudio.pause();
