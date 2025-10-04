@@ -99,7 +99,7 @@
           try {
             const evt = JSON.parse(e.data);
 
-            // Buffer user speech transcript (no rings here)
+            // Buffer user speech transcript
             if (evt.type === "response.audio_transcript.delta" && evt.delta) {
               userTranscript += evt.delta;
             }
@@ -109,14 +109,14 @@
               aiTranscript += evt.delta.map(d=>d.content?.[0]?.text||"").join("");
             }
 
-            // 🔹 AI started speaking → rings ON
+            // Halo ON
             if (evt.type === "response.audio.started") {
               setSpeaking(true);
             }
 
-            // 🔹 AI finished speaking → rings OFF after short linger
+            // Halo OFF after short linger, add lines to conversation buffer
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
-              setTimeout(() => setSpeaking(false), 2000); // 2s linger
+              setTimeout(() => setSpeaking(false), 2000);
               if (userTranscript.trim()) {
                 conversationLines.push({role:"user", text:userTranscript.trim()});
                 userTranscript = "";
