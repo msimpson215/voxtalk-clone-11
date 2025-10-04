@@ -34,18 +34,19 @@ let userTranscript = "";
 let aiTranscript = "";
 let listening = false; 
 
-// State: Only tracks if the AI has started playing audio.
+// State tracking for pulsing
 let isAITalking = false; 
+let isReadyToPulse = false; // NEW FLAG: Prevents pulse on initial connection/load
 
 function setAIPulsing(on) {
     if (on) {
-        // AI START: Check if the user is NOT actively pressing the button (mic on)
-        if (pttBtn.getAttribute('aria-pressed') !== 'true') {
+        // AI START: Only pulse if we are ready AND the user isn't pressing PTT
+        if (isReadyToPulse && pttBtn.getAttribute('aria-pressed') !== 'true') {
             pttBtn.classList.add('speaking');
             isAITalking = true;
         }
     } else {
-        // AI END: Remove the class instantly (no 15-second hold)
+        // AI END: Remove the class instantly
         pttBtn.classList.remove('speaking');
         isAITalking = false;
     }
@@ -83,13 +84,13 @@ let micTrack = null;
 
 // CRITICAL START HOOK: Use the audio element's "playing" event
 rtAudio.onplaying = () => {
-    // START the pulse the moment audio begins.
-    if (!isAITalking) { 
+    // 1. START the pulse the moment audio begins, BUT ONLY IF WE ARE READY
+    if (isReadyToPulse && !isAITalking) { 
         console.log("AUDIO ELEMENT PLAYING: Starting Pulse!");
         setAIPulsing(true);
     }
     
-    // Ensure user mic is OFF if the AI is talking (interruptibility)
+    // 2. Ensure user mic is OFF if the AI is talking (interruptibility)
     if (listening) {
         listening = false;
         if (micTrack) micTrack.enabled = false;
@@ -138,6 +139,10 @@ async function initRealtime() {
                 if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
                     setAIPulsing(false); 
                     console.log("AI Audio Done. Stopping Pulse.");
+                    
+                    // CRITICAL: Now that the AI has finished its first response (or any response), 
+                    // we can allow the pulse to run on future AI speech events.
+                    isReadyToPulse = true; 
 
                     // Finalize and buffer transcripts for printing
                     if (userTranscript.trim()) {
@@ -188,10 +193,10 @@ pttBtn.onclick = () => {
         // User starts speaking (PTT ON)
         console.log("PTT Button Clicked ON. Mic enabled.");
 
-        // Immediately kill the AI pulse and set the user's state.
+        // 1. Immediately kill the AI pulse when the user takes over.
         setAIPulsing(false);
         
-        // Set button state visually
+        // 2. Set button state visually
         pttBtn.setAttribute('aria-pressed', 'true');
         
     } else {
@@ -209,8 +214,6 @@ pttBtn.onclick = () => {
 };
 
 printBtn.onclick = printConversation;
-// Immediately attempt to hide the pulse on initial load/connection
-setAIPulsing(false); 
 initRealtime();
 </script>
 </body>
