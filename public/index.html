@@ -119,11 +119,11 @@
               aiTranscript += evt.delta.map(d => d.content?.[0]?.text || "").join("");
             }
 
-            // Halo ON only when AI starts (event-driven, NOT delta or first-turn)
+            // Halo ON when AI starts
             if (evt.type === "response.audio.started") {
               setAIPulsing(true);
             }
-            // Halo OFF when AI finishes (event-driven, NOT delta or first-turn)
+            // Halo OFF when AI finishes
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
               setAIPulsing(false);
               if (userTranscript.trim()) {
