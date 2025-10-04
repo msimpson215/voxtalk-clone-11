@@ -80,6 +80,7 @@ function showProduct(name, price, imageUrl, linkUrl) {
         <img src="${imageUrl}" alt="${name}">
         <div class="info">
             <h3>${name}</h3>
+            <h3>${name}</h3>
             <p>Price: ${price}</p>
             <a href="${linkUrl}" target="_blank">View Product</a>
             <a href="${linkUrl}?add-to-cart=1" target="_blank">Add to Cart</a>
@@ -178,6 +179,18 @@ async function initRealtime() {
 pttBtn.onclick = () => {
     listening = !listening;
     if (micTrack) micTrack.enabled = listening;
+
+    // CRITICAL: Force reset of the AI state when starting a new session
+    if (listening) {
+        if (pulsingTimeout) {
+            clearTimeout(pulsingTimeout);
+            pulsingTimeout = null;
+        }
+        // Ensure the visual effect is OFF when the user is speaking
+        pttBtn.classList.remove('speaking');
+        isAITalking = false;
+    }
+
 
     if (!listening) {
         // Clear all AI state immediately when the user clicks OFF
