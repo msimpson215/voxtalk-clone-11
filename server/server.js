@@ -1,11 +1,10 @@
 import express from "express";
 import dotenv from "dotenv";
-import fetch from "node-fetch"; // Assuming this is running on a Node version that doesn't have fetch globally
+import fetch from "node-fetch";
 
 dotenv.config();
 
 const app = express();
-// Serve static files (index.html, style.css, etc.) from the 'public' directory
 app.use(express.static("public"));
 
 app.post("/session", async (req, res) => {
@@ -19,7 +18,6 @@ app.post("/session", async (req, res) => {
             body: JSON.stringify({
                 model: "gpt-4o-realtime-preview",
                 voice: "alloy",
-                // Instructions are critical for the personality and language
                 instructions:
                 "You are an AI voice assistant. You are branded as VoxTalk. ALWAYS respond in English. Translate if needed, but reply only in English. Keep responses concise and conversational."
             })
@@ -27,7 +25,6 @@ app.post("/session", async (req, res) => {
 
         const data = await r.json();
         
-        // Check for API errors before sending to client
         if (data.error) {
             console.error("API Session Error:", data.error);
             return res.status(500).json({ error: "API session failed", details: data.error });
