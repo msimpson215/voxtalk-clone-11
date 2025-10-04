@@ -28,7 +28,7 @@
     const conversationDiv = document.getElementById('conversation');
     const spotlightCard = document.getElementById('spotlight-card');
 
-    // Halo OFF on page load. This is CRITICAL!
+    // Halo OFF on page load
     pttBtn.classList.remove('speaking');
 
     let conversationLines = [];
@@ -37,6 +37,7 @@
     let listening = false;
 
     function setAIPulsing(on) {
+      console.log("setAIPulsing called with:", on); // Debugging
       if (on) {
         pttBtn.classList.add('speaking');   // Halo ON
       } else {
@@ -76,6 +77,7 @@
 
     // Halo ON when AI starts speaking (audio plays)
     rtAudio.onplaying = () => {
+      console.log("rtAudio.onplaying: AI starts speaking, HALO ON");
       setAIPulsing(true); // Halo ON
       if (listening) {
         listening = false;
@@ -86,6 +88,7 @@
 
     // Halo OFF when AI finishes (audio ends)
     rtAudio.onended = () => {
+      console.log("rtAudio.onended: AI stops speaking, HALO OFF");
       setAIPulsing(false); // Halo OFF
     };
 
@@ -114,6 +117,7 @@
         dc.onmessage = (e) => {
           try {
             const evt = JSON.parse(e.data);
+            console.log("AI Event:", evt.type);
 
             if (evt.type === "response.audio_transcript.delta" && evt.delta) {
               userTranscript += evt.delta;
@@ -124,10 +128,12 @@
 
             // Halo ON when AI starts
             if (evt.type === "response.audio.started") {
+              console.log("AI should start HALO");
               setAIPulsing(true); // Halo ON
             }
             // Halo OFF when AI finishes
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
+              console.log("AI should stop HALO");
               setAIPulsing(false); // Halo OFF
               if (userTranscript.trim()) {
                 conversationLines.push({ role: "user", text: userTranscript.trim() });
