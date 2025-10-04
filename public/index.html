@@ -2,156 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk (Event-Driven Halo)</title>
+  <title>VoxTalk (Halo Debug Test)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app">
-    <p class="demo-label">Event-Driven Halo</p>
-    <h1>Talk to VoxTalk</h1>
-    <button id="pttBtn" aria-pressed="false"></button>
-    <div class="hint">Click to Talk</div>
+    <h1>VoxTalk Halo Debug Test</h1>
+    <button id="pttBtn" aria-pressed="false">Should See Halo ON PAGE LOAD</button>
+    <div class="hint">If you see the halo, CSS & HTML are fine.<br>If not, CSS/HTML issue.</div>
     <audio id="remote" autoplay playsinline></audio>
   </div>
-
-  <!-- Print button fixed lower-left -->
-  <button id="printBtn">🖨️ Print Conversation</button>
-  <!-- Hidden conversation panel for print preview -->
-  <div id="conversation-panel" style="display:none;">
-    <div id="conversation"></div>
-  </div>
-
   <script>
+    // Force halo ON as soon as page loads
+    document.getElementById('pttBtn').classList.add('speaking');
+
+    // Keep everything else commented out for now
+    /*
     const pttBtn   = document.getElementById('pttBtn');
     const rtAudio  = document.getElementById('remote');
-    const printBtn = document.getElementById('printBtn');
-    const conversationPanel = document.getElementById('conversation-panel');
-    const conversationDiv = document.getElementById('conversation');
-
-    let conversationLines = [];
-    let userTranscript = "";
-    let aiTranscript = "";
-
-    function setSpeaking(on) { 
-      pttBtn.classList.toggle('speaking', on); // This triggers the halo CSS!
-    }
-
-    function printConversation() {
-      conversationDiv.innerHTML = "";
-      conversationLines.forEach(line => {
-        const div = document.createElement("div");
-        div.textContent = (line.role === "user" ? "You: " : "VoxTalk: ") + line.text;
-        conversationDiv.appendChild(div);
-      });
-      conversationPanel.style.display = "block";
-      setTimeout(() => {
-        window.print();
-        conversationPanel.style.display = "none";
-      }, 250);
-    }
-
-    let pc = null;
-    let micTrack = null;
-
-    async function initRealtime() {
-      try {
-        const s = await fetch("/session", { method:"POST" });
-        const { client_secret, model, voice } = await s.json();
-
-        if (pc) {
-          pc.close();
-          pc = null;
-        }
-
-        pc = new RTCPeerConnection();
-        const mic = await navigator.mediaDevices.getUserMedia({ audio:true });
-        micTrack = mic.getTracks()[0];
-        micTrack.enabled = false;
-        pc.addTrack(micTrack, mic);
-
-        pc.ontrack = (ev)=> {
-          rtAudio.srcObject = ev.streams[0];
-          rtAudio.play().catch(()=>{});
-        };
-
-        const dc = pc.createDataChannel("events");
-        dc.onmessage = (e)=> {
-          try {
-            const evt = JSON.parse(e.data);
-
-            // Buffer user speech transcript (NO HALO for delta!)
-            if (evt.type === "response.audio_transcript.delta" && evt.delta) {
-              userTranscript += evt.delta;
-            }
-
-            // Buffer AI message transcript
-            if (evt.type === "response.message.delta" && evt.delta) {
-              aiTranscript += evt.delta.map(d=>d.content?.[0]?.text||"").join("");
-            }
-
-            // Halo ON only when AI starts speaking (event-driven)
-            if (evt.type === "response.audio.started") {
-              setSpeaking(true);
-            }
-
-            // Halo OFF when AI finishes speaking (event-driven)
-            if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
-              setSpeaking(false);
-              if (userTranscript.trim()) {
-                conversationLines.push({role:"user", text:userTranscript.trim()});
-                userTranscript = "";
-              }
-              if (aiTranscript.trim()) {
-                conversationLines.push({role:"ai", text:aiTranscript.trim()});
-                aiTranscript = "";
-              }
-            }
-          } catch(err) {
-            console.error("Parse error:", e.data, err);
-          }
-        };
-
-        const offer = await pc.createOffer({ offerToReceiveAudio:true });
-        await pc.setLocalDescription(offer);
-
-        const r = await fetch(
-          `https://api.openai.com/v1/realtime?model=${encodeURIComponent(model)}&voice=${voice}`,
-          {
-            method:"POST",
-            headers: {
-              "Authorization":`Bearer ${client_secret.value}`,
-              "Content-Type":"application/sdp"
-            },
-            body: offer.sdp
-          }
-        );
-        const answer = { type:"answer", sdp: await r.text() };
-        await pc.setRemoteDescription(answer);
-
-      } catch(err) {
-        console.error("Realtime init failed", err);
-      }
-    }
-
-    let listening = false;
-    pttBtn.onclick = () => {
-      listening = !listening;
-      if (micTrack) micTrack.enabled = listening;
-      if (!listening) {
-        setSpeaking(false);
-        rtAudio.pause();
-        rtAudio.currentTime = 0;
-        rtAudio.srcObject = null;
-        userTranscript = "";
-        aiTranscript = "";
-      }
-    };
-
-    printBtn.onclick = printConversation;
-
-    initRealtime();
+    // ... rest of your code ...
+    */
   </script>
 </body>
 </html>
