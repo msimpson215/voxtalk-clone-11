@@ -32,11 +32,11 @@ const spotlightCard = document.getElementById('spotlight-card');
 let conversationLines = [];
 let userTranscript = "";
 let aiTranscript = "";
-let listening = false; 
+let listening = false; // Tracks if the USER's mic is on
 
 // State and Timer for Pulsing Logic
 let pulsingTimeout = null;
-let isAITalking = false; 
+let isAITalking = false; // Tracks if the AI is actively playing audio or in the 15s "hold" window
 
 function setAIPulsing(on) {
     // Clear any existing timer
@@ -93,10 +93,18 @@ let micTrack = null;
 
 // CRITICAL START HOOK: Use the audio element's "playing" event
 rtAudio.onplaying = () => {
-    // Only set pulsing state if we aren't already speaking (which should only be true from a previous call)
+    // 1. Start the ring for the AI.
     if (!isAITalking) { 
         console.log("AUDIO ELEMENT PLAYING: Starting Pulse!");
         setAIPulsing(true);
+    }
+    
+    // 2. CRITICAL for PTT: If the AI is talking, the user cannot be.
+    if (listening) {
+        listening = false;
+        if (micTrack) micTrack.enabled = false;
+        pttBtn.setAttribute('aria-pressed', 'false');
+        console.log("AI interrupted user/mic turned off.");
     }
 };
 
@@ -183,14 +191,14 @@ async function initRealtime() {
 pttBtn.onclick = () => {
     listening = !listening;
     
-    // *** CRITICAL FIX HERE: Explicitly update mic and button state ***
+    // Explicitly update mic state based on the new listening state
     if (micTrack) micTrack.enabled = listening;
 
     if (listening) {
         // User starts speaking (PTT ON)
-        console.log("PTT Button Clicked ON. isAITalking reset to: false");
+        console.log("PTT Button Clicked ON. Mic enabled.");
 
-        // Clear any AI pulsing timers/visuals instantly when user starts speaking
+        // 1. Immediately kill any AI pulsing/hold window.
         if (pulsingTimeout) {
             clearTimeout(pulsingTimeout);
             pulsingTimeout = null;
@@ -198,26 +206,19 @@ pttBtn.onclick = () => {
         pttBtn.classList.remove('speaking');
         isAITalking = false;
         
-        // Ensure the button state visually reflects the active listening
+        // 2. Set button state visually
         pttBtn.setAttribute('aria-pressed', 'true');
-
+        
     } else {
         // User stops speaking (PTT OFF)
-        console.log("PTT Button Clicked OFF. AI State Cleared.");
+        console.log("PTT Button Clicked OFF. Mic disabled.");
 
-        // We don't change the AI state here, we wait for the AI response to trigger the rings.
-        // We only clean up if the AI hasn't started talking yet.
-        
-        // Stop audio playback if it was lingering (e.g., stopping mic mid-AI response)
+        // Reset audio for cleanup
         rtAudio.pause();
         rtAudio.currentTime = 0;
         rtAudio.srcObject = null;
         
-        // Reset transcripts
-        userTranscript = "";
-        aiTranscript = "";
-
-        // Ensure the button state visually reflects the non-listening state
+        // Reset button state visually
         pttBtn.setAttribute('aria-pressed', 'false');
     }
 };
