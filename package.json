@@ -1,23 +1,19 @@
 {
-  "name": "voxtalk-demo",
+  "name": "voice-chat-app",
   "version": "1.0.0",
-  "description": "A real-time voice AI demo using WebRTC and OpenAI.",
-  "main": "server.js",
-  "type": "module",
+  "description": "Real-time voice chat application",
+  "main": "server/server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js"
   },
-  "keywords": [
-    "ai",
-    "voice",
-    "webrtc",
-    "openai"
-  ],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "node-fetch": "^3.3.2"
+    "express": "^4.17.1",
+    "socket.io": "^4.5.4",
+    "dotenv": "^16.0.0",
+    "ws": "^8.2.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
   }
 }
