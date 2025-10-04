@@ -91,6 +91,14 @@ function showProduct(name, price, imageUrl, linkUrl) {
 let pc = null;
 let micTrack = null;
 
+// *** CRITICAL START HOOK: Use the audio element's "playing" event ***
+rtAudio.onplaying = () => {
+    if (!isAITalking) {
+        console.log("AUDIO ELEMENT PLAYING: Starting Pulse!");
+        setAIPulsing(true);
+    }
+};
+
 async function initRealtime() {
     try {
         const s = await fetch("/session", { method:"POST" });
@@ -122,13 +130,7 @@ async function initRealtime() {
                     userTranscript += evt.delta;
                 }
 
-                // AI START HOOK: CRITICAL NEW LOGIC: Use the first AUDIO delta to start the pulse
-                if (evt.type === "response.audio.delta" && !isAITalking) {
-                    console.log("AI AUDIO DELTA RECEIVED: Starting Pulse!");
-                    setAIPulsing(true); 
-                }
-
-                // Buffer AI message transcript
+                // Buffer AI message transcript - USED ONLY FOR TRANSCRIPT
                 if (evt.type === "response.message.delta" && evt.delta) {
                     aiTranscript += evt.delta.map(d => d.content?.[0]?.text || "").join("");
                 }
