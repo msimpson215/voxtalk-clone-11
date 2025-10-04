@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <title>VoxTalk (Soothing Radiance)</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-initial-scale=1" />
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -34,26 +34,35 @@ let userTranscript = "";
 let aiTranscript = "";
 let listening = false; 
 
-// State and Timer for Pulsing Logic (still needed for cleanup)
+// State and Timer for Pulsing Logic
 let pulsingTimeout = null;
 let isAITalking = false; 
 
+// --- CRITICAL FIX: The class toggling now ONLY happens here, driven by AI events. ---
 function setAIPulsing(on) {
-    // This function is included but is NOT used by the PTT button in this test mode.
+    // Clear any existing timer
     if (pulsingTimeout) {
         clearTimeout(pulsingTimeout);
         pulsingTimeout = null;
     }
 
     if (on) {
+        // AI START: Add the class immediately
+        pttBtn.classList.add('speaking');
         isAITalking = true;
     } else {
+        // AI END: Remove the class after a 15-second delay (the "alive" window)
         const ALIVE_WINDOW_MS = 15000; 
+
+        // Set the timer to remove the 'speaking' class
         pulsingTimeout = setTimeout(() => {
+            pttBtn.classList.remove('speaking');
             isAITalking = false;
         }, ALIVE_WINDOW_MS);
     }
 }
+// --- END CRITICAL FIX ---
+
 
 function printConversation() {
     conversationDiv.innerHTML = "";
@@ -111,20 +120,26 @@ async function initRealtime() {
             try {
                 const evt = JSON.parse(e.data);
 
-                // NOTE: AI PULSING LOGIC BYPASSED FOR THIS TEST
-                
-                // Buffer user speech transcript
+                // Buffer user speech transcript (Whisper ASR) - DOES NOT TRIGGER PULSE
                 if (evt.type === "response.audio_transcript.delta" && evt.delta) {
                     userTranscript += evt.delta;
                 }
-                
+
+                // AI START HOOK: Use the first piece of text from the AI to start the pulse
+                if (evt.type === "response.message.delta" && evt.delta && !isAITalking) {
+                    setAIPulsing(true); 
+                }
+
                 // Buffer AI message transcript
                 if (evt.type === "response.message.delta" && evt.delta) {
                     aiTranscript += evt.delta.map(d => d.content?.[0]?.text || "").join("");
                 }
 
-                // Finalize and buffer transcripts for printing
+                // AI END HOOK: Use the confirmed end of the AI audio stream to start the 15s timer
                 if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
+                    setAIPulsing(false); 
+
+                    // Finalize and buffer transcripts for printing
                     if (userTranscript.trim()) {
                         conversationLines.push({ role: "user", text: userTranscript.trim() });
                         userTranscript = "";
@@ -162,27 +177,23 @@ async function initRealtime() {
     }
 }
 
-// PTT button logic (SIMPLE CSS TEST MODE)
-// This is the CRITICAL part for this test.
+// PTT button logic (User Input Control ONLY)
 pttBtn.onclick = () => {
     listening = !listening;
     if (micTrack) micTrack.enabled = listening;
 
-    if (listening) {
-        // FORCES THE HALO ON WHEN YOU CLICK THE BUTTON
-        pttBtn.classList.add('speaking');
-    }
-
+    // IMPORTANT: NO pttBtn.classList.add/remove('speaking') HERE! 
+    // This button only controls the mic and state cleanup.
     if (!listening) {
-        // FORCES THE HALO OFF WHEN YOU CLICK THE BUTTON AGAIN
-        pttBtn.classList.remove('speaking');
-        
-        // Clear audio and transcripts
+        // Clear all AI state immediately when the user clicks OFF
         if (pulsingTimeout) {
             clearTimeout(pulsingTimeout);
             pulsingTimeout = null;
         }
+        pttBtn.classList.remove('speaking');
         isAITalking = false;
+        
+        // Clear audio and transcripts
         rtAudio.pause();
         rtAudio.currentTime = 0;
         rtAudio.srcObject = null;
@@ -193,7 +204,6 @@ pttBtn.onclick = () => {
 
 printBtn.onclick = printConversation;
 initRealtime();
-// showProduct("Corvette C7 Headlight Assembly", "$899.99", "https://example.com/corvette-headlight.jpg", "https://example.com/product/c7-headlight");
 </script>
 </body>
 </html>
