@@ -28,6 +28,9 @@
     const conversationDiv = document.getElementById('conversation');
     const spotlightCard = document.getElementById('spotlight-card');
 
+    // Ensure halo is OFF when the page loads
+    pttBtn.classList.remove('speaking');
+
     let conversationLines = [];
     let userTranscript = "";
     let aiTranscript = "";
@@ -72,15 +75,16 @@
     let micTrack = null;
 
     rtAudio.onplaying = () => {
-      setAIPulsing(true);
+      setAIPulsing(true); // Halo ON
       if (listening) {
         listening = false;
         if (micTrack) micTrack.enabled = false;
         pttBtn.setAttribute('aria-pressed', 'false');
       }
     };
+
     rtAudio.onended = () => {
-      setAIPulsing(false);
+      setAIPulsing(false); // Halo OFF
     };
 
     async function initRealtime() {
@@ -109,7 +113,6 @@
           try {
             const evt = JSON.parse(e.data);
 
-            // Buffer transcripts for printing only
             if (evt.type === "response.audio_transcript.delta" && evt.delta) {
               userTranscript += evt.delta;
             }
@@ -161,7 +164,7 @@
       }
     }
 
-    // PTT button logic (User Input Control ONLY)
+    // PTT button logic (User Input Control ONLY; does NOT touch halo)
     pttBtn.onclick = () => {
       listening = !listening;
       if (micTrack) micTrack.enabled = listening;
