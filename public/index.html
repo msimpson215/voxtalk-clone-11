@@ -1,111 +1,98 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<title>VoxTalk (Soothing Radiance)</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" /> 
-<link rel="icon" href="data:,">
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <title>VoxTalk (Event-Driven Halo)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="app">
-<p class="demo-label">Soothing Radiance</p>
-<h1>Talk to VoxTalk</h1>
-<button id="pttBtn" aria-pressed="false"></button>
-<div class="hint">Click to Talk</div>
-<button id="printBtn" class="print-btn"> Print Conversation</button>
-<audio id="remote" autoplay playsinline></audio>
-</div>
-<div id="conversation-panel">
-<div id="conversation"></div>
-</div>
-<div id="spotlight-card"></div>
-<script>
-const pttBtn = document.getElementById('pttBtn');
-const rtAudio = document.getElementById('remote');
-const printBtn = document.getElementById('printBtn');
-const conversationPanel = document.getElementById('conversation-panel');
-const conversationDiv = document.getElementById('conversation');
-const spotlightCard = document.getElementById('spotlight-card');
+  <div class="app">
+    <p class="demo-label">Event-Driven Halo</p>
+    <h1>Talk to VoxTalk</h1>
+    <button id="pttBtn" aria-pressed="false"></button>
+    <div class="hint">Click to Talk</div>
+    <button id="printBtn" class="print-btn">🖨️ Print Conversation</button>
+    <audio id="remote" autoplay playsinline></audio>
+  </div>
+  <div id="conversation-panel" style="display:none;">
+    <div id="conversation"></div>
+  </div>
+  <div id="spotlight-card"></div>
+  <script>
+    const pttBtn = document.getElementById('pttBtn');
+    const rtAudio = document.getElementById('remote');
+    const printBtn = document.getElementById('printBtn');
+    const conversationPanel = document.getElementById('conversation-panel');
+    const conversationDiv = document.getElementById('conversation');
+    const spotlightCard = document.getElementById('spotlight-card');
 
-// Buffer for conversation lines
-let conversationLines = [];
-let userTranscript = "";
-let aiTranscript = "";
-let listening = false; 
+    let conversationLines = [];
+    let userTranscript = "";
+    let aiTranscript = "";
+    let listening = false;
 
-// The critical flag: Blocks AI pulse until the user has taken their first turn.
-let is_first_turn = true; 
-
-function setAIPulsing(on) {
-    if (on) {
-        // AI START: Only pulse if the user is NOT actively pressing the button (mic on)
-        if (pttBtn.getAttribute('aria-pressed') !== 'true') {
-            pttBtn.classList.add('speaking');
-        }
-    } else {
-        // AI END: Remove the class instantly
+    function setAIPulsing(on) {
+      if (on) {
+        pttBtn.classList.add('speaking');
+      } else {
         pttBtn.classList.remove('speaking');
+      }
     }
-}
 
-function printConversation() {
-    conversationDiv.innerHTML = "";
-    conversationLines.forEach(line => {
+    function printConversation() {
+      conversationDiv.innerHTML = "";
+      conversationLines.forEach(line => {
         const div = document.createElement("div");
         div.textContent = (line.role === "user" ? "You: " : "VoxTalk: ") + line.text;
         conversationDiv.appendChild(div);
-    });
-    conversationPanel.style.display = "block";
-    setTimeout(() => {
+      });
+      conversationPanel.style.display = "block";
+      setTimeout(() => {
         window.print();
         conversationPanel.style.display = "none";
-    }, 250);
-}
+      }, 250);
+    }
 
-function showProduct(name, price, imageUrl, linkUrl) {
-    spotlightCard.innerHTML = `
+    function showProduct(name, price, imageUrl, linkUrl) {
+      spotlightCard.innerHTML = `
         <img src="${imageUrl}" alt="${name}">
         <div class="info">
-            <h3>${name}</h3>
-            <p>Price: ${price}</p>
-            <a href="${linkUrl}" target="_blank">View Product</a>
-            <a href="${linkUrl}?add-to-cart=1" target="_blank">Add to Cart</a>
+          <h3>${name}</h3>
+          <p>Price: ${price}</p>
+          <a href="${linkUrl}" target="_blank">View Product</a>
+          <a href="${linkUrl}?add-to-cart=1" target="_blank">Add to Cart</a>
         </div>
-    `;
-    spotlightCard.classList.add("visible");
-}
-
-let pc = null;
-let micTrack = null;
-
-// CRITICAL START HOOK: Use the audio element's "playing" event
-rtAudio.onplaying = () => {
-    // 1. START the pulse the moment audio begins, BUT ONLY IF IT'S NOT THE FIRST TURN.
-    if (!is_first_turn) { 
-        console.log("AUDIO ELEMENT PLAYING: Starting Pulse (Non-Initial Turn)!");
-        setAIPulsing(true);
-    } else {
-        console.log("AUDIO ELEMENT PLAYING: Blocked (First Turn Active).");
+      `;
+      spotlightCard.classList.add("visible");
     }
-    
-    // 2. Ensure user mic is OFF if the AI is talking (interruptibility)
-    if (listening) {
+
+    let pc = null;
+    let micTrack = null;
+
+    // Halo ON when AI audio is playing
+    rtAudio.onplaying = () => {
+      setAIPulsing(true);
+      if (listening) {
         listening = false;
         if (micTrack) micTrack.enabled = false;
         pttBtn.setAttribute('aria-pressed', 'false');
-        console.log("AI interrupted user/mic turned off.");
-    }
-};
+      }
+    };
+    // Halo OFF when AI audio ends
+    rtAudio.onended = () => {
+      setAIPulsing(false);
+    };
 
-async function initRealtime() {
-    try {
+    async function initRealtime() {
+      try {
         const s = await fetch("/session", { method:"POST" });
         const { client_secret, model, voice } = await s.json();
 
         if (pc) {
-            pc.close();
-            pc = null;
+          pc.close();
+          pc = null;
         }
 
         pc = new RTCPeerConnection();
@@ -113,106 +100,86 @@ async function initRealtime() {
         micTrack = mic.getTracks()[0];
         micTrack.enabled = false;
         pc.addTrack(micTrack, mic);
-        
+
         pc.ontrack = (ev) => {
-            rtAudio.srcObject = ev.streams[0];
-            rtAudio.play().catch(()=>{});
+          rtAudio.srcObject = ev.streams[0];
+          rtAudio.play().catch(()=>{});
         };
 
         const dc = pc.createDataChannel("events");
         dc.onmessage = (e) => {
-            try {
-                const evt = JSON.parse(e.data);
+          try {
+            const evt = JSON.parse(e.data);
 
-                // Buffer user speech transcript (Whisper ASR)
-                if (evt.type === "response.audio_transcript.delta" && evt.delta) {
-                    userTranscript += evt.delta;
-                }
-
-                // Buffer AI message transcript - USED ONLY FOR TRANSCRIPT
-                if (evt.type === "response.message.delta" && evt.delta) {
-                    aiTranscript += evt.delta.map(d => d.content?.[0]?.text || "").join("");
-                }
-
-                // AI END HOOK: Use the confirmed end of the AI audio stream to stop the pulse
-                if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
-                    setAIPulsing(false); 
-                    console.log("AI Audio Done. Stopping Pulse.");
-                    
-                    // CRITICAL: The AI has completed its FIRST response. From now on, the pulse is allowed.
-                    is_first_turn = false; 
-
-                    // Finalize and buffer transcripts for printing
-                    if (userTranscript.trim()) {
-                        conversationLines.push({ role: "user", text: userTranscript.trim() });
-                        userTranscript = "";
-                    }
-                    if (aiTranscript.trim()) {
-                        conversationLines.push({ role: "ai", text: aiTranscript.trim() });
-                        aiTranscript = "";
-                    }
-                }
-            } catch(err) {
-                console.error("Parse error:", e.data, err);
+            // Buffer transcripts for printing only
+            if (evt.type === "response.audio_transcript.delta" && evt.delta) {
+              userTranscript += evt.delta;
             }
+            if (evt.type === "response.message.delta" && evt.delta) {
+              aiTranscript += evt.delta.map(d => d.content?.[0]?.text || "").join("");
+            }
+
+            // Halo ON only when AI starts (event-driven, NOT delta or first-turn)
+            if (evt.type === "response.audio.started") {
+              setAIPulsing(true);
+            }
+            // Halo OFF when AI finishes (event-driven, NOT delta or first-turn)
+            if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
+              setAIPulsing(false);
+              if (userTranscript.trim()) {
+                conversationLines.push({ role: "user", text: userTranscript.trim() });
+                userTranscript = "";
+              }
+              if (aiTranscript.trim()) {
+                conversationLines.push({ role: "ai", text: aiTranscript.trim() });
+                aiTranscript = "";
+              }
+            }
+          } catch(err) {
+            console.error("Parse error:", e.data, err);
+          }
         };
 
         const offer = await pc.createOffer({ offerToReceiveAudio:true });
         await pc.setLocalDescription(offer);
 
         const r = await fetch(
-            `https://api.openai.com/v1/realtime?model=${encodeURIComponent(model)}&voice=${voice}`,
-            {
-                method:"POST",
-                headers: {
-                    "Authorization":`Bearer ${client_secret.value}`,
-                    "Content-Type":"application/sdp"
-                },
-                body: offer.sdp
-            }
+          `https://api.openai.com/v1/realtime?model=${encodeURIComponent(model)}&voice=${voice}`,
+          {
+            method:"POST",
+            headers: {
+              "Authorization":`Bearer ${client_secret.value}`,
+              "Content-Type":"application/sdp"
+            },
+            body: offer.sdp
+          }
         );
 
         const answer = { type:"answer", sdp: await r.text() };
         await pc.setRemoteDescription(answer);
 
-    } catch(err) {
+      } catch(err) {
         console.error("Realtime init failed", err);
+      }
     }
-}
 
-// PTT button logic (User Input Control ONLY)
-pttBtn.onclick = () => {
-    listening = !listening;
-    
-    // Explicitly update mic state based on the new listening state
-    if (micTrack) micTrack.enabled = listening;
-
-    if (listening) {
-        // User starts speaking (PTT ON)
-        console.log("PTT Button Clicked ON. Mic enabled.");
-
-        // 1. Immediately kill the AI pulse when the user takes over.
+    // PTT button logic (User Input Control ONLY)
+    pttBtn.onclick = () => {
+      listening = !listening;
+      if (micTrack) micTrack.enabled = listening;
+      if (listening) {
         setAIPulsing(false);
-        
-        // 2. Set button state visually
         pttBtn.setAttribute('aria-pressed', 'true');
-        
-    } else {
-        // User stops speaking (PTT OFF)
-        console.log("PTT Button Clicked OFF. Mic disabled.");
-        
-        // Reset audio for cleanup
+      } else {
         rtAudio.pause();
         rtAudio.currentTime = 0;
         rtAudio.srcObject = null;
-        
-        // Reset button state visually
         pttBtn.setAttribute('aria-pressed', 'false');
-    }
-};
+      }
+    };
 
-printBtn.onclick = printConversation;
-initRealtime();
-</script>
+    printBtn.onclick = printConversation;
+    initRealtime();
+  </script>
 </body>
 </html>
