@@ -80,7 +80,6 @@ function showProduct(name, price, imageUrl, linkUrl) {
         <img src="${imageUrl}" alt="${name}">
         <div class="info">
             <h3>${name}</h3>
-            <h3>${name}</h3>
             <p>Price: ${price}</p>
             <a href="${linkUrl}" target="_blank">View Product</a>
             <a href="${linkUrl}?add-to-cart=1" target="_blank">Add to Cart</a>
@@ -118,14 +117,26 @@ async function initRealtime() {
             try {
                 const evt = JSON.parse(e.data);
 
+                // *** DEBUG LOG 1: Confirm any event is received ***
+                // console.log("Received Event:", evt.type);
+
                 // Buffer user speech transcript (Whisper ASR)
                 if (evt.type === "response.audio_transcript.delta" && evt.delta) {
                     userTranscript += evt.delta;
                 }
 
                 // AI START HOOK: Use the first piece of text from the AI to start the pulse
-                if (evt.type === "response.message.delta" && evt.delta && !isAITalking) {
-                    setAIPulsing(true); 
+                if (evt.type === "response.message.delta" && evt.delta) {
+                    // *** DEBUG LOG 2: Show the message delta content ***
+                    console.log("Response Message Delta Received:", evt.delta);
+                    
+                    // *** DEBUG LOG 3: Show the current state of the blocking variable ***
+                    console.log("isAITalking state before check:", isAITalking);
+
+                    if (!isAITalking) {
+                        setAIPulsing(true); 
+                        console.log("RING TRIGGER SUCCESSFUL!");
+                    }
                 }
 
                 // Buffer AI message transcript
@@ -136,6 +147,7 @@ async function initRealtime() {
                 // AI END HOOK: Use the confirmed end of the AI audio stream to start the 15s timer
                 if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
                     setAIPulsing(false); 
+                    console.log("AI Audio Done. Starting 15s hold timer.");
 
                     // Finalize and buffer transcripts for printing
                     if (userTranscript.trim()) {
@@ -189,6 +201,7 @@ pttBtn.onclick = () => {
         // Ensure the visual effect is OFF when the user is speaking
         pttBtn.classList.remove('speaking');
         isAITalking = false;
+        console.log("PTT Button Clicked ON. isAITalking reset to:", isAITalking);
     }
 
 
@@ -200,6 +213,7 @@ pttBtn.onclick = () => {
         }
         pttBtn.classList.remove('speaking');
         isAITalking = false;
+        console.log("PTT Button Clicked OFF. AI State Cleared.");
         
         // Clear audio and transcripts
         rtAudio.pause();
