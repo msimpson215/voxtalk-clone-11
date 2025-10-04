@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <title>VoxTalk (Soothing Radiance)</title>
-<meta name="viewport" content="width=device-width, initial-initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1" /> 
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -38,7 +38,6 @@ let listening = false;
 let pulsingTimeout = null;
 let isAITalking = false; 
 
-// --- CRITICAL FIX: The class toggling now ONLY happens here, driven by AI events. ---
 function setAIPulsing(on) {
     // Clear any existing timer
     if (pulsingTimeout) {
@@ -61,8 +60,6 @@ function setAIPulsing(on) {
         }, ALIVE_WINDOW_MS);
     }
 }
-// --- END CRITICAL FIX ---
-
 
 function printConversation() {
     conversationDiv.innerHTML = "";
@@ -120,7 +117,7 @@ async function initRealtime() {
             try {
                 const evt = JSON.parse(e.data);
 
-                // Buffer user speech transcript (Whisper ASR) - DOES NOT TRIGGER PULSE
+                // Buffer user speech transcript (Whisper ASR)
                 if (evt.type === "response.audio_transcript.delta" && evt.delta) {
                     userTranscript += evt.delta;
                 }
@@ -182,8 +179,6 @@ pttBtn.onclick = () => {
     listening = !listening;
     if (micTrack) micTrack.enabled = listening;
 
-    // IMPORTANT: NO pttBtn.classList.add/remove('speaking') HERE! 
-    // This button only controls the mic and state cleanup.
     if (!listening) {
         // Clear all AI state immediately when the user clicks OFF
         if (pulsingTimeout) {
