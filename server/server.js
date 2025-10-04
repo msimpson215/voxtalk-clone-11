@@ -1,37 +1,41 @@
-import express from "express";
-import dotenv from "dotenv";
-dotenv.config();
+const express = require('express');
+const http = require('http');
+const WebSocket = require('ws');
+const path = require('path');
+require('dotenv').config();
 
 const app = express();
-app.use(express.static("public"));
+const server = http.createServer(app);
 
-app.post("/session", async (req, res) => {
-try {
-const r = await fetch("https://api.openai.com/v1/realtime/sessions", {
-method: "POST",
-headers: {
-Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-"Content-Type": "application/json"
-},
-body: JSON.stringify({
-model: "gpt-4o-realtime-preview",
-voice: "alloy",
-instructions:
-"You are an AI voice assistant. ALWAYS respond in English. Translate if needed, but reply only in English."
-})
+// Serve static files
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Create WebSocket server
+const wss = new WebSocket.Server({ server });
+
+// Handle WebSocket connections
+wss.on('connection', (ws) => {
+    console.log('Client connected');
+
+    ws.on('message', (data) => {
+        // Handle audio data from client
+        if (data instanceof Buffer) {
+            // Process audio data here
+            console.log('Received audio data:', data.length);
+            ws.send(JSON.stringify({
+                type: 'vad',
+                status: 'active'
+            }));
+        }
+    });
+
+    ws.on('close', () => {
+        console.log('Client disconnected');
+    });
 });
 
-const data = await r.json();
-res.json({
-client_secret: data.client_secret,
-model: "gpt-4o-realtime-preview",
-voice: "alloy"
-});
-} catch (e) {
-console.error("Session error:", e);
-res.status(500).json({ error: "session failed" });
-}
-});
-
+// Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Server running on " + PORT));
+server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
