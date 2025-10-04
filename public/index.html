@@ -34,21 +34,18 @@ let userTranscript = "";
 let aiTranscript = "";
 let listening = false; 
 
-// State tracking for pulsing
-let isAITalking = false; 
-let isReadyToPulse = false; // NEW FLAG: Prevents pulse on initial connection/load
+// The critical flag: Blocks AI pulse until the user has taken their first turn.
+let is_first_turn = true; 
 
 function setAIPulsing(on) {
     if (on) {
-        // AI START: Only pulse if we are ready AND the user isn't pressing PTT
-        if (isReadyToPulse && pttBtn.getAttribute('aria-pressed') !== 'true') {
+        // AI START: Only pulse if the user is NOT actively pressing the button (mic on)
+        if (pttBtn.getAttribute('aria-pressed') !== 'true') {
             pttBtn.classList.add('speaking');
-            isAITalking = true;
         }
     } else {
         // AI END: Remove the class instantly
         pttBtn.classList.remove('speaking');
-        isAITalking = false;
     }
 }
 
@@ -84,10 +81,12 @@ let micTrack = null;
 
 // CRITICAL START HOOK: Use the audio element's "playing" event
 rtAudio.onplaying = () => {
-    // 1. START the pulse the moment audio begins, BUT ONLY IF WE ARE READY
-    if (isReadyToPulse && !isAITalking) { 
-        console.log("AUDIO ELEMENT PLAYING: Starting Pulse!");
+    // 1. START the pulse the moment audio begins, BUT ONLY IF IT'S NOT THE FIRST TURN.
+    if (!is_first_turn) { 
+        console.log("AUDIO ELEMENT PLAYING: Starting Pulse (Non-Initial Turn)!");
         setAIPulsing(true);
+    } else {
+        console.log("AUDIO ELEMENT PLAYING: Blocked (First Turn Active).");
     }
     
     // 2. Ensure user mic is OFF if the AI is talking (interruptibility)
@@ -140,9 +139,8 @@ async function initRealtime() {
                     setAIPulsing(false); 
                     console.log("AI Audio Done. Stopping Pulse.");
                     
-                    // CRITICAL: Now that the AI has finished its first response (or any response), 
-                    // we can allow the pulse to run on future AI speech events.
-                    isReadyToPulse = true; 
+                    // CRITICAL: The AI has completed its FIRST response. From now on, the pulse is allowed.
+                    is_first_turn = false; 
 
                     // Finalize and buffer transcripts for printing
                     if (userTranscript.trim()) {
