@@ -2,14 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk Halo Like ChatGPT</title>
+  <title>VoxTalk – True Halo Sync</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app">
-    <p class="demo-label">Halo Like ChatGPT</p>
     <h1>Talk to VoxTalk</h1>
     <button id="pttBtn" aria-pressed="false"></button>
     <div class="hint">Click to Talk</div>
@@ -23,10 +22,6 @@
     function setSpeaking(on) {
       pttBtn.classList.toggle('speaking', on);
     }
-
-    // Tie halo to actual audio playback (like ChatGPT)
-    rtAudio.onplaying = () => setSpeaking(true);
-    rtAudio.onended   = () => setSpeaking(false);
 
     let pc = null;
     let micTrack = null;
@@ -42,13 +37,33 @@
         micTrack.enabled = false;
         pc.addTrack(micTrack, mic);
 
+        // Play incoming AI audio
         pc.ontrack = (ev)=> {
           rtAudio.srcObject = ev.streams[0];
         };
 
-        // DataChannel still there if you need transcripts later
-        pc.createDataChannel("events");
+        // Create data channel to receive lifecycle events
+        const dc = pc.createDataChannel("events");
+        dc.onmessage = (e)=> {
+          try {
+            const evt = JSON.parse(e.data);
 
+            // 🌟 Halo ON when AI begins speaking
+            if (evt.type === "response.audio.started") {
+              setSpeaking(true);
+            }
+
+            // 🌟 Halo OFF when AI finishes speaking
+            if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
+              setSpeaking(false);
+            }
+
+          } catch(err) {
+            console.warn("Event parse error", e.data);
+          }
+        };
+
+        // Create and send SDP offer
         const offer = await pc.createOffer({ offerToReceiveAudio:true });
         await pc.setLocalDescription(offer);
 
@@ -66,7 +81,7 @@
         const answer = { type:"answer", sdp: await r.text() };
         await pc.setRemoteDescription(answer);
 
-        console.log("Realtime connection established");
+        console.log("✅ Realtime connected.");
       } catch(err) {
         console.error("Realtime init failed", err);
       }
@@ -76,6 +91,7 @@
     pttBtn.onclick = () => {
       listening = !listening;
       if (micTrack) micTrack.enabled = listening;
+      pttBtn.classList.toggle('active', listening);
     };
 
     initRealtime();
