@@ -27,8 +27,8 @@ width:120px; height:120px; border-radius:50%; border:none; cursor:pointer;
 background: radial-gradient(circle at 30% 30%, #3b82f6, #1e40af);
 box-shadow:0 6px 18px rgba(37,99,235,.3);
 transition: transform 0.15s ease, box-shadow 0.3s ease;
-position: relative;
-overflow: visible;
+position: relative; /* CRITICAL for halos to work */
+overflow: visible; /* CRITICAL for halos to work */
 }
 #pttBtn:hover { transform: scale(1.02); }
 #pttBtn:active { transform: scale(0.95); }
@@ -73,13 +73,10 @@ border-radius: 10px;
 padding: 10px;
 font-size: 0.9em;
 z-index: 100;
-/* FIX: Removed inline display:none from HTML, so we hide it here */
 display: none; 
 }
-/* Showing conversation panel only when printing */
 @media print {
     #conversation-panel { display: block !important; }
-    /* Hide all other elements when printing */
     body > *:not(#conversation-panel) { display: none; }
 }
 #spotlight-card {
