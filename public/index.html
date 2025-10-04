@@ -117,26 +117,15 @@ async function initRealtime() {
             try {
                 const evt = JSON.parse(e.data);
 
-                // *** DEBUG LOG 1: Confirm any event is received ***
-                // console.log("Received Event:", evt.type);
-
                 // Buffer user speech transcript (Whisper ASR)
                 if (evt.type === "response.audio_transcript.delta" && evt.delta) {
                     userTranscript += evt.delta;
                 }
 
-                // AI START HOOK: Use the first piece of text from the AI to start the pulse
-                if (evt.type === "response.message.delta" && evt.delta) {
-                    // *** DEBUG LOG 2: Show the message delta content ***
-                    console.log("Response Message Delta Received:", evt.delta);
-                    
-                    // *** DEBUG LOG 3: Show the current state of the blocking variable ***
-                    console.log("isAITalking state before check:", isAITalking);
-
-                    if (!isAITalking) {
-                        setAIPulsing(true); 
-                        console.log("RING TRIGGER SUCCESSFUL!");
-                    }
+                // AI START HOOK: CRITICAL NEW LOGIC: Use the first AUDIO delta to start the pulse
+                if (evt.type === "response.audio.delta" && !isAITalking) {
+                    console.log("AI AUDIO DELTA RECEIVED: Starting Pulse!");
+                    setAIPulsing(true); 
                 }
 
                 // Buffer AI message transcript
