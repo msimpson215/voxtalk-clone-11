@@ -2,72 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk (Soothing Radiance)</title>
+  <title>VoxTalk (Event-Driven Halo)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app">
-    <p class="demo-label">Soothing Radiance</p>
+    <p class="demo-label">Event-Driven Halo</p>
     <h1>Talk to VoxTalk</h1>
     <button id="pttBtn" aria-pressed="false"></button>
     <div class="hint">Click to Talk</div>
     <audio id="remote" autoplay playsinline></audio>
   </div>
 
-  <!-- Hidden conversation panel -->
-  <div id="conversation-panel" style="display:none;">
-    <div id="conversation"></div>
-  </div>
-
-  <!-- Spotlight product card -->
-  <div id="spotlight-card"></div>
-
-  <!-- Print button fixed lower-left -->
-  <button id="printBtn">🖨️ Print Conversation</button>
-
   <script>
     const pttBtn   = document.getElementById('pttBtn');
     const rtAudio  = document.getElementById('remote');
-    const printBtn = document.getElementById('printBtn');
-    const conversationPanel = document.getElementById('conversation-panel');
-    const conversationDiv = document.getElementById('conversation');
-    const spotlightCard = document.getElementById('spotlight-card');
-
-    let conversationLines = [];
-    let userTranscript = "";
-    let aiTranscript = "";
 
     function setSpeaking(on) { 
       pttBtn.classList.toggle('speaking', on); 
-    }
-
-    function printConversation() {
-      conversationDiv.innerHTML = "";
-      conversationLines.forEach(line => {
-        const div = document.createElement("div");
-        div.textContent = (line.role === "user" ? "You: " : "VoxTalk: ") + line.text;
-        conversationDiv.appendChild(div);
-      });
-      conversationPanel.style.display = "block";
-      setTimeout(() => {
-        window.print();
-        conversationPanel.style.display = "none";
-      }, 250);
-    }
-
-    function showProduct(name, price, imageUrl, linkUrl) {
-      spotlightCard.innerHTML = `
-        <img src="${imageUrl}" alt="${name}">
-        <div class="info">
-          <h3>${name}</h3>
-          <p>Price: ${price}</p>
-          <a href="${linkUrl}" target="_blank">View Product</a>
-          <a href="${linkUrl}?add-to-cart=1" target="_blank">Add to Cart</a>
-        </div>
-      `;
-      spotlightCard.classList.add("visible");
     }
 
     let pc = null;
@@ -99,32 +53,14 @@
           try {
             const evt = JSON.parse(e.data);
 
-            // Buffer user speech transcript
-            if (evt.type === "response.audio_transcript.delta" && evt.delta) {
-              userTranscript += evt.delta;
-            }
-
-            // Buffer AI message transcript
-            if (evt.type === "response.message.delta" && evt.delta) {
-              aiTranscript += evt.delta.map(d=>d.content?.[0]?.text||"").join("");
-            }
-
-            // Halo ON
+            // Halo ON only when AI starts speaking (event-driven)
             if (evt.type === "response.audio.started") {
               setSpeaking(true);
             }
 
-            // Halo OFF after short linger, add lines to conversation buffer
+            // Halo OFF when AI finishes speaking (event-driven)
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
-              setTimeout(() => setSpeaking(false), 2000);
-              if (userTranscript.trim()) {
-                conversationLines.push({role:"user", text:userTranscript.trim()});
-                userTranscript = "";
-              }
-              if (aiTranscript.trim()) {
-                conversationLines.push({role:"ai", text:aiTranscript.trim()});
-                aiTranscript = "";
-              }
+              setSpeaking(false);
             }
           } catch(err) {
             console.error("Parse error:", e.data, err);
@@ -162,12 +98,8 @@
         rtAudio.pause();
         rtAudio.currentTime = 0;
         rtAudio.srcObject = null;
-        userTranscript = "";
-        aiTranscript = "";
       }
     };
-
-    printBtn.onclick = printConversation;
 
     initRealtime();
   </script>
