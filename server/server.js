@@ -21,7 +21,22 @@ const wss = new WebSocket.Server({ server });
 // Handle WebSocket connections
 wss.on('connection', (ws) => {
     console.log('Client connected');
-    // ... rest of your WebSocket code
+
+    ws.on('message', (data) => {
+        // Handle audio data from client
+        if (data instanceof Buffer) {
+            // Process audio data here
+            console.log('Received audio data:', data.length);
+            ws.send(JSON.stringify({
+                type: 'vad',
+                status: 'active'
+            }));
+        }
+    });
+
+    ws.on('close', () => {
+        console.log('Client disconnected');
+    });
 });
 
 // Start server
