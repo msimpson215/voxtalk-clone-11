@@ -1,46 +1,39 @@
-const express = require('express');
-const http = require('http');
-const WebSocket = require('ws');
-const path = require('path');
-require('dotenv').config();
+import express from "express";
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
-const server = http.createServer(app);
+app.use(express.static("public"));
 
-// Serve static files from public directory
-app.use(express.static(path.join(__dirname, '../public')));
-
-// Serve index.html for all other routes
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public', 'index.html'));
-});
-
-// Create WebSocket server
-const wss = new WebSocket.Server({ server });
-
-// Handle WebSocket connections
-wss.on('connection', (ws) => {
-    console.log('Client connected');
-
-    ws.on('message', (data) => {
-        // Handle audio data from client
-        if (data instanceof Buffer) {
-            // Process audio data here
-            console.log('Received audio data:', data.length);
-            ws.send(JSON.stringify({
-                type: 'vad',
-                status: 'active'
-            }));
-        }
+// Provide short-lived OpenAI Realtime session token
+app.post("/session", async (req, res) => {
+  try {
+    const r = await fetch("https://api.openai.com/v1/realtime/sessions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-realtime-preview",
+        voice: "alloy",
+        instructions:
+          "You are VoxTalk, a friendly AI voice assistant. Always reply in clear English speech.",
+      }),
     });
 
-    ws.on('close', () => {
-        console.log('Client disconnected');
+    const data = await r.json();
+
+    res.json({
+      client_secret: data.client_secret,
+      model: "gpt-4o-realtime-preview",
+      voice: "alloy",
     });
+  } catch (e) {
+    console.error("Session error:", e);
+    res.status(500).json({ error: "session failed" });
+  }
 });
 
-// Start server
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log("✅ Server running on port " + PORT));
