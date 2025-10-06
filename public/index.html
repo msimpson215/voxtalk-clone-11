@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk (Hybrid Halo)</title>
+  <title>VoxTalk (Halo Sync)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app">
-    <p class="demo-label">Hybrid Halo Control</p>
+    <p class="demo-label">Halo Sync - Stable</p>
     <h1>Talk to VoxTalk</h1>
     <button id="pttBtn" aria-pressed="false"></button>
     <div class="hint">Click to Talk</div>
@@ -30,11 +30,15 @@
     const conversationDiv = document.getElementById('conversation');
 
     let conversationLines = [];
-    let userTranscript = "";
-    let aiTranscript = "";
+    let pc = null;
+    let micTrack = null;
+    let haloActive = false;
 
     function setSpeaking(on) {
+      if (on === haloActive) return;
+      haloActive = on;
       pttBtn.classList.toggle('speaking', on);
+      console.log(`[VoxTalk] Halo ${on ? "ON" : "OFF"}`);
     }
 
     function printConversation() {
@@ -51,66 +55,65 @@
       }, 250);
     }
 
-    let pc = null;
-    let micTrack = null;
-
     async function initRealtime() {
       try {
-        const s = await fetch("/session", { method:"POST" });
+        const s = await fetch("/session", { method: "POST" });
         const { client_secret, model, voice } = await s.json();
 
         if (pc) { pc.close(); pc = null; }
 
         pc = new RTCPeerConnection();
-        const mic = await navigator.mediaDevices.getUserMedia({ audio:true });
+        const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
         micTrack = mic.getTracks()[0];
         micTrack.enabled = false;
         pc.addTrack(micTrack, mic);
 
         pc.ontrack = (ev) => {
           rtAudio.srcObject = ev.streams[0];
-          rtAudio.play().catch(()=>{});
         };
 
-        // Hybrid control: mechanical + playback
+        // DataChannel for event control
         const dc = pc.createDataChannel("events");
         dc.onmessage = (e) => {
           try {
             const evt = JSON.parse(e.data);
             if (evt.type === "response.audio.started") {
-              setSpeaking(true);
               console.log("[VoxTalk] AI START");
+              setSpeaking(true);
             }
             if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
-              setSpeaking(false);
-              console.log("[VoxTalk] AI STOP");
+              console.log("[VoxTalk] AI DONE signal (waiting for playback to end)");
+              // don't turn off here, wait for real audio end
             }
-          } catch(err) {
+          } catch (err) {
             console.error("Parse error:", e.data, err);
           }
         };
 
-        rtAudio.onplaying = () => { setSpeaking(true); };
-        rtAudio.onended = () => { setSpeaking(false); };
+        // Only turn off after real playback ends
+        rtAudio.onended = () => {
+          console.log("[VoxTalk] Playback ended → Halo OFF");
+          setSpeaking(false);
+        };
 
-        const offer = await pc.createOffer({ offerToReceiveAudio:true });
+        const offer = await pc.createOffer({ offerToReceiveAudio: true });
         await pc.setLocalDescription(offer);
 
         const r = await fetch(
           `https://api.openai.com/v1/realtime?model=${encodeURIComponent(model)}&voice=${voice}`,
           {
-            method:"POST",
+            method: "POST",
             headers: {
-              "Authorization":`Bearer ${client_secret.value}`,
-              "Content-Type":"application/sdp"
+              "Authorization": `Bearer ${client_secret.value}`,
+              "Content-Type": "application/sdp"
             },
             body: offer.sdp
           }
         );
-        const answer = { type:"answer", sdp: await r.text() };
+        const answer = { type: "answer", sdp: await r.text() };
         await pc.setRemoteDescription(answer);
 
-      } catch(err) {
+      } catch (err) {
         console.error("Realtime init failed", err);
       }
     }
@@ -125,8 +128,6 @@
         rtAudio.pause();
         rtAudio.currentTime = 0;
         rtAudio.srcObject = null;
-        userTranscript = "";
-        aiTranscript = "";
       }
     };
 
