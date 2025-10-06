@@ -2,62 +2,77 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk (Halo Test Build)</title>
+  <title>VoxTalk (Stable Baseline)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app">
-    <p class="demo-label">VoxTalk Halo Test</p>
+    <p class="demo-label">VoxTalk Stable Baseline</p>
     <h1>Talk to VoxTalk</h1>
     <button id="pttBtn" aria-pressed="false"></button>
     <div class="hint">Click to Talk</div>
     <audio id="remote" autoplay playsinline></audio>
   </div>
 
+  <button id="printBtn">🖨️ Print Conversation</button>
+
+  <div id="conversation-panel" style="display:none;">
+    <div id="conversation"></div>
+  </div>
+
   <script>
     const pttBtn = document.getElementById("pttBtn");
     const rtAudio = document.getElementById("remote");
+    const printBtn = document.getElementById("printBtn");
+    const conversationDiv = document.getElementById("conversation");
+    const conversationPanel = document.getElementById("conversation-panel");
+
+    let pc = null;
+    let micTrack = null;
+    let conversationLines = [];
 
     function setSpeaking(on) {
       pttBtn.classList.toggle("speaking", on);
       console.log("[Halo]", on ? "ON" : "OFF");
     }
 
-    // Real audio lifecycle listeners
+    // Show conversation in print panel
+    function printConversation() {
+      conversationDiv.innerHTML = "";
+      conversationLines.forEach(line => {
+        const div = document.createElement("div");
+        div.textContent = (line.role === "user" ? "You: " : "VoxTalk: ") + line.text;
+        conversationDiv.appendChild(div);
+      });
+      conversationPanel.style.display = "block";
+      setTimeout(() => {
+        window.print();
+        conversationPanel.style.display = "none";
+      }, 300);
+    }
+
+    printBtn.onclick = printConversation;
+
+    // --- AUDIO PLAYBACK HOOKS ---
     rtAudio.onplaying = () => {
-      console.log("[Audio] playing");
+      console.log("[Audio] playing → Halo ON");
       setSpeaking(true);
     };
     function stopHalo() {
-      console.log("[Audio] stopped/ended");
+      console.log("[Audio] stopped → Halo OFF");
       setSpeaking(false);
     }
-    rtAudio.onpause = stopHalo;
     rtAudio.onended = stopHalo;
+    rtAudio.onpause = stopHalo;
     rtAudio.onemptied = stopHalo;
 
-    // Manual halo toggle to verify CSS
-    pttBtn.onclick = () => {
-      const isActive = pttBtn.classList.toggle("speaking");
-      console.log("[Manual toggle]", isActive ? "ON" : "OFF");
-    };
-
-    // --- WebRTC / Realtime connection ---
-    let pc = null;
-    let micTrack = null;
-
+    // --- INIT REALTIME SESSION ---
     async function initRealtime() {
       try {
-        const s = await fetch("/session", { method: "POST" });
-        const { client_secret, model, voice } = await s.json();
-
-        if (pc) {
-          pc.close();
-          pc = null;
-          rtAudio.srcObject = null;
-        }
+        const res = await fetch("/session", { method: "POST" });
+        const { client_secret, model, voice } = await res.json();
 
         pc = new RTCPeerConnection();
         const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -72,22 +87,18 @@
 
         const dc = pc.createDataChannel("events");
         dc.onmessage = (e) => {
-          try {
-            const evt = JSON.parse(e.data);
-            if (evt.type === "response.audio.started") {
-              console.log("[VoxTalk] AI START");
-            }
-            if (evt.type === "response.audio.done") {
-              console.log("[VoxTalk] AI DONE signal (waiting for playback)");
-            }
-          } catch (err) {
-            console.error("Parse error:", e.data, err);
+          const evt = JSON.parse(e.data || "{}");
+          if (evt.type === "response.audio.started") {
+            console.log("[VoxTalk] AI START → Halo ON");
+            setSpeaking(true);
+          }
+          if (evt.type === "response.audio.done") {
+            console.log("[VoxTalk] AI DONE → waiting for playback end");
           }
         };
 
         const offer = await pc.createOffer({ offerToReceiveAudio: true });
         await pc.setLocalDescription(offer);
-
         const r = await fetch(
           `https://api.openai.com/v1/realtime?model=${encodeURIComponent(model)}&voice=${voice}`,
           {
@@ -96,18 +107,3 @@
               "Authorization": `Bearer ${client_secret.value}`,
               "Content-Type": "application/sdp"
             },
-            body: offer.sdp
-          }
-        );
-        const answer = { type: "answer", sdp: await r.text() };
-        await pc.setRemoteDescription(answer);
-
-      } catch (err) {
-        console.error("Realtime init failed", err);
-      }
-    }
-
-    initRealtime();
-  </script>
-</body>
-</html>
