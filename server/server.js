@@ -1,37 +1,68 @@
-import express from "express";
-import dotenv from "dotenv";
-dotenv.config();
+body {
+  margin:0;
+  font-family:system-ui,sans-serif;
+  display:grid;
+  place-items:center;
+  min-height:100vh;
+  background: radial-gradient(circle at 50% 20%, #dbeafe, #93c5fd 40%, #1e3a8a 90%);
+}
 
-const app = express();
-app.use(express.static("public"));
+.app { text-align:center; max-width:600px; position:relative; }
+.demo-label { font-size:12px; color:#111; margin-bottom:4px; }
+h1 { margin:6px 0; font-size:22px; }
 
-app.post("/session", async (req, res) => {
-  try {
-    const r = await fetch("https://api.openai.com/v1/realtime/sessions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-realtime-preview",
-        voice: "alloy",
-        instructions:
-          "You are VoxTalk, an AI voice assistant. Always respond in English and be concise."
-      })
-    });
+#printBtn {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  padding: 6px 16px;
+  font-size: 16px;
+  border-radius: 8px;
+  background: #f3f4f6;
+  color: #222;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  z-index: 200;
+}
 
-    const data = await r.json();
-    res.json({
-      client_secret: data.client_secret,
-      model: "gpt-4o-realtime-preview",
-      voice: "alloy"
-    });
-  } catch (e) {
-    console.error("Session error:", e);
-    res.status(500).json({ error: "session failed" });
-  }
-});
+#pttBtn {
+  width:120px; height:120px; border-radius:50%; border:none; cursor:pointer;
+  background: radial-gradient(circle at 30% 30%, #3b82f6, #1e40af);
+  box-shadow:0 6px 18px rgba(37,99,235,.3);
+  transition: transform 0.15s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: visible;
+}
+#pttBtn:hover { transform: scale(1.02); }
+#pttBtn:active { transform: scale(0.95); }
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Server running on " + PORT));
+#pttBtn.speaking::after {
+  content:"";
+  position:absolute;
+  inset:-10px;
+  border-radius:50%;
+  border:4px solid rgba(59,130,246,0.75);
+  animation: pulseRing 1.5s ease-in-out infinite;
+  z-index:1;
+}
+
+#pttBtn.speaking::before {
+  content:"";
+  position:absolute;
+  inset:-18px;
+  border-radius:50%;
+  border:3px solid rgba(59,130,246,0.3);
+  animation: pulseTrail 2.3s ease-in-out infinite;
+  z-index:0;
+}
+
+@keyframes pulseRing {
+  0% { transform: scale(1); opacity: 1; }
+  70% { transform: scale(1.25); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
+}
+@keyframes pulseTrail {
+  0% { transform: scale(1); opacity: 0.5; }
+  70% { transform: scale(1.35); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
+}
