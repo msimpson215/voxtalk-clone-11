@@ -2,65 +2,62 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk (Halo Sync)</title>
+  <title>VoxTalk (Halo Test Build)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app">
-    <p class="demo-label">Halo Sync - Stable</p>
+    <p class="demo-label">VoxTalk Halo Test</p>
     <h1>Talk to VoxTalk</h1>
     <button id="pttBtn" aria-pressed="false"></button>
     <div class="hint">Click to Talk</div>
     <audio id="remote" autoplay playsinline></audio>
   </div>
 
-  <button id="printBtn">🖨️ Print Conversation</button>
-
-  <div id="conversation-panel" style="display:none;">
-    <div id="conversation"></div>
-  </div>
-
   <script>
-    const pttBtn = document.getElementById('pttBtn');
-    const rtAudio = document.getElementById('remote');
-    const printBtn = document.getElementById('printBtn');
-    const conversationPanel = document.getElementById('conversation-panel');
-    const conversationDiv = document.getElementById('conversation');
-
-    let conversationLines = [];
-    let pc = null;
-    let micTrack = null;
-    let haloActive = false;
+    const pttBtn = document.getElementById("pttBtn");
+    const rtAudio = document.getElementById("remote");
 
     function setSpeaking(on) {
-      if (on === haloActive) return;
-      haloActive = on;
-      pttBtn.classList.toggle('speaking', on);
-      console.log(`[VoxTalk] Halo ${on ? "ON" : "OFF"}`);
+      pttBtn.classList.toggle("speaking", on);
+      console.log("[Halo]", on ? "ON" : "OFF");
     }
 
-    function printConversation() {
-      conversationDiv.innerHTML = "";
-      conversationLines.forEach(line => {
-        const div = document.createElement("div");
-        div.textContent = (line.role === "user" ? "You: " : "VoxTalk: ") + line.text;
-        conversationDiv.appendChild(div);
-      });
-      conversationPanel.style.display = "block";
-      setTimeout(() => {
-        window.print();
-        conversationPanel.style.display = "none";
-      }, 250);
+    // Real audio lifecycle listeners
+    rtAudio.onplaying = () => {
+      console.log("[Audio] playing");
+      setSpeaking(true);
+    };
+    function stopHalo() {
+      console.log("[Audio] stopped/ended");
+      setSpeaking(false);
     }
+    rtAudio.onpause = stopHalo;
+    rtAudio.onended = stopHalo;
+    rtAudio.onemptied = stopHalo;
+
+    // Manual halo toggle to verify CSS
+    pttBtn.onclick = () => {
+      const isActive = pttBtn.classList.toggle("speaking");
+      console.log("[Manual toggle]", isActive ? "ON" : "OFF");
+    };
+
+    // --- WebRTC / Realtime connection ---
+    let pc = null;
+    let micTrack = null;
 
     async function initRealtime() {
       try {
         const s = await fetch("/session", { method: "POST" });
         const { client_secret, model, voice } = await s.json();
 
-        if (pc) { pc.close(); pc = null; }
+        if (pc) {
+          pc.close();
+          pc = null;
+          rtAudio.srcObject = null;
+        }
 
         pc = new RTCPeerConnection();
         const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -70,30 +67,22 @@
 
         pc.ontrack = (ev) => {
           rtAudio.srcObject = ev.streams[0];
+          rtAudio.play().catch(() => {});
         };
 
-        // DataChannel for event control
         const dc = pc.createDataChannel("events");
         dc.onmessage = (e) => {
           try {
             const evt = JSON.parse(e.data);
             if (evt.type === "response.audio.started") {
               console.log("[VoxTalk] AI START");
-              setSpeaking(true);
             }
-            if (evt.type === "response.audio.done" || evt.type === "output_audio_buffer.stopped") {
-              console.log("[VoxTalk] AI DONE signal (waiting for playback to end)");
-              // don't turn off here, wait for real audio end
+            if (evt.type === "response.audio.done") {
+              console.log("[VoxTalk] AI DONE signal (waiting for playback)");
             }
           } catch (err) {
             console.error("Parse error:", e.data, err);
           }
-        };
-
-        // Only turn off after real playback ends
-        rtAudio.onended = () => {
-          console.log("[VoxTalk] Playback ended → Halo OFF");
-          setSpeaking(false);
         };
 
         const offer = await pc.createOffer({ offerToReceiveAudio: true });
@@ -118,20 +107,6 @@
       }
     }
 
-    let listening = false;
-    pttBtn.onclick = () => {
-      listening = !listening;
-      if (micTrack) micTrack.enabled = listening;
-      pttBtn.classList.toggle('listening', listening);
-      if (!listening) {
-        setSpeaking(false);
-        rtAudio.pause();
-        rtAudio.currentTime = 0;
-        rtAudio.srcObject = null;
-      }
-    };
-
-    printBtn.onclick = printConversation;
     initRealtime();
   </script>
 </body>
