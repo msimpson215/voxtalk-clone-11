@@ -17,7 +17,7 @@ app.post("/session", async (req, res) => {
         model: "gpt-4o-realtime-preview",
         voice: "alloy",
         instructions:
-          "You are VoxTalk, an AI voice assistant. Always respond in English and be concise."
+          "You are VoxTalk, a friendly AI assistant. Respond naturally, in English only."
       })
     });
 
