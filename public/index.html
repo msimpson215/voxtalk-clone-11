@@ -2,20 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk • Core Clean v1 (Mothership Baseline)</title>
+  <title>VoxTalk • Core Clean v1.1</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Top placeholder controls -->
+  <!-- Top section -->
   <header class="topbar">
-    <button class="pill ghost" aria-label="Connect (placeholder)">Connect</button>
-    <button class="pill ghost" aria-label="Plane (placeholder)">Plane</button>
-    <button class="pill ghost" aria-label="Audio (placeholder)">Audio</button>
+    <h1 class="brand">VOXTALK</h1>
+    <nav class="nav-buttons">
+      <button class="pill ghost" aria-label="View Cart">View Cart</button>
+      <button class="pill ghost" aria-label="Camera (placeholder)">Camera</button>
+      <button class="pill ghost" aria-label="Checkout">Checkout</button>
+    </nav>
   </header>
 
-  <!-- Center stage: halo talk button -->
+  <!-- Center halo -->
   <main class="stage">
     <button id="haloBtn" class="halo-btn" aria-pressed="false" aria-label="Hold to Talk">
       <div class="halo ring r1"></div>
@@ -26,10 +29,10 @@
     <div class="hint">Press &amp; hold to talk • release to stop</div>
   </main>
 
-  <!-- Quiet mode bar (text input + small mic) -->
+  <!-- Quiet mode -->
   <section class="quiet">
     <form id="quietForm" class="quiet-form" autocomplete="off">
-      <input id="quietInput" class="quiet-input" type="text" placeholder="Type here… (quiet mode)" />
+      <input id="quietInput" class="quiet-input" type="text" placeholder="Type here (Quiet Mode)..." />
       <button id="quietMic" type="button" class="quiet-mic" aria-label="Quiet voice input">
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21H9v2h6v-2h-2v-3.08A7 7 0 0 0 19 11h-2z" fill="currentColor"/>
@@ -38,7 +41,6 @@
       <button class="pill" type="submit">Send</button>
     </form>
 
-    <!-- Replies appear here (text-only) -->
     <div id="thread" class="thread" aria-live="polite"></div>
   </section>
 
@@ -48,9 +50,6 @@
   <audio id="vuTap" muted></audio>
 
   <script>
-    // -----------------------------
-    // Utilities
-    // -----------------------------
     const $ = (sel) => document.querySelector(sel);
     const threadEl = $("#thread");
     const printBtn = $("#printBtn");
@@ -68,7 +67,6 @@
     }
 
     function speak(text) {
-      // Basic TTS so voice mode talks back without needing server-side TTS.
       try {
         const u = new SpeechSynthesisUtterance(text);
         window.speechSynthesis.cancel();
@@ -90,9 +88,7 @@
       return data.reply || "";
     }
 
-    // -----------------------------
-    // Quiet Mode: Text Submit
-    // -----------------------------
+    // Quiet mode text
     quietForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const prompt = quietInput.value.trim();
@@ -103,17 +99,14 @@
         const reply = await sendToServer(prompt);
         appendBubble("assistant", reply);
       } catch (err) {
-        appendBubble("assistant", "⚠️ Sorry—something went wrong reaching the server.");
+        appendBubble("assistant", "⚠️ Server error.");
         console.error(err);
       }
     });
 
-    // -----------------------------
-    // Quiet Mode: Small Mic (browser speech-to-text)
-    // -----------------------------
+    // Quiet mic
     let quietRecognizing = false;
     let quietRecognizer = null;
-
     function setupSpeechRecognizer() {
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SR) return null;
@@ -127,7 +120,7 @@
     quietMicBtn.addEventListener("click", () => {
       if (!quietRecognizer) quietRecognizer = setupSpeechRecognizer();
       if (!quietRecognizer) {
-        appendBubble("assistant", "🎤 Speech recognition not supported in this browser.");
+        appendBubble("assistant", "🎤 Speech recognition not supported.");
         return;
       }
       if (quietRecognizing) {
@@ -143,20 +136,19 @@
         quietRecognizing = false;
         quietMicBtn.classList.remove("recording");
         if (!text) return;
-        quietInput.value = "";
         appendBubble("user", text);
         try {
           const reply = await sendToServer(text);
           appendBubble("assistant", reply);
         } catch (err) {
-          appendBubble("assistant", "⚠️ Sorry—something went wrong reaching the server.");
+          appendBubble("assistant", "⚠️ Server error.");
           console.error(err);
         }
       };
       quietRecognizer.onerror = () => {
         quietRecognizing = false;
         quietMicBtn.classList.remove("recording");
-        appendBubble("assistant", "🎤 Couldn’t capture speech input.");
+        appendBubble("assistant", "🎤 Couldn’t capture speech.");
       };
       quietRecognizer.onend = () => {
         quietRecognizing = false;
@@ -164,62 +156,8 @@
       };
     });
 
-    // -----------------------------
-    // Halo Button: Voice input with halo animation
-    // (Browser STT + TTS; halo animated with WebAudio VU-like pulse)
-    // -----------------------------
-    let mediaStream = null;
-    let audioCtx = null;
-    let analyser = null;
-    let rafId = null;
-
-    async function startMic() {
-      if (mediaStream) return;
-      mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const src = audioCtx.createMediaStreamSource(mediaStream);
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 512;
-      src.connect(analyser);
-      animateHalo();
-    }
-
-    function stopMic() {
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = null;
-      if (audioCtx) audioCtx.close().catch(()=>{});
-      audioCtx = null;
-      analyser = null;
-      if (mediaStream) {
-        mediaStream.getTracks().forEach(t => t.stop());
-        mediaStream = null;
-      }
-      // Reset CSS vars
-      haloBtn.style.setProperty("--pulse", "0");
-    }
-
-    function animateHalo() {
-      const data = new Uint8Array(analyser.frequencyBinCount);
-      const loop = () => {
-        analyser.getByteTimeDomainData(data);
-        // quick RMS for visual intensity
-        let sum = 0;
-        for (let i = 0; i < data.length; i++) {
-          const v = (data[i] - 128) / 128;
-          sum += v*v;
-        }
-        const rms = Math.sqrt(sum / data.length);
-        const intensity = Math.min(1, rms * 6); // scale up for a nice pulse
-        haloBtn.style.setProperty("--pulse", intensity.toFixed(3));
-        rafId = requestAnimationFrame(loop);
-      };
-      loop();
-    }
-
-    // Halo press & hold behavior with STT
+    // Halo (unchanged behavior)
     let voiceRecognizer = null;
-    let talking = false;
-
     function ensureVoiceRecognizer() {
       if (voiceRecognizer) return voiceRecognizer;
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -231,23 +169,15 @@
       return voiceRecognizer;
     }
 
-    function setHaloActive(active) {
-      haloBtn.setAttribute("aria-pressed", active ? "true" : "false");
-      haloBtn.classList.toggle("active", !!active);
-      document.body.classList.toggle("listening", !!active);
-    }
-
+    let talking = false;
     async function beginTalk() {
-      // Start mic & halo pulse
-      await startMic();
-      setHaloActive(true);
-      // Start STT
       const r = ensureVoiceRecognizer();
       if (!r) {
-        appendBubble("assistant", "🎤 Speech recognition not supported in this browser.");
+        appendBubble("assistant", "🎤 Speech recognition not supported.");
         return;
       }
       talking = true;
+      haloBtn.classList.add("active");
       r.start();
       r.onresult = async (ev) => {
         if (!talking) return;
@@ -259,21 +189,20 @@
             appendBubble("assistant", reply);
             speak(reply);
           } catch (err) {
-            appendBubble("assistant", "⚠️ Sorry—something went wrong reaching the server.");
+            appendBubble("assistant", "⚠️ Server error.");
             console.error(err);
           }
         }
       };
-      r.onerror = () => {/* swallow */};
+      r.onerror = () => {};
     }
 
     function endTalk() {
       talking = false;
-      setHaloActive(false);
+      haloBtn.classList.remove("active");
       if (voiceRecognizer) {
         try { voiceRecognizer.stop(); } catch {}
       }
-      stopMic();
     }
 
     haloBtn.addEventListener("mousedown", beginTalk);
@@ -281,15 +210,9 @@
     window.addEventListener("mouseup", endTalk);
     window.addEventListener("touchend", endTalk);
 
-    // -----------------------------
-    // Print Conversation
-    // -----------------------------
-    printBtn.addEventListener("click", () => {
-      window.print();
-    });
+    printBtn.addEventListener("click", () => window.print());
 
-    // First-run friendly starter
-    appendBubble("assistant", "Hi! I’m VoxTalk. Type in quiet mode, tap the small mic, or press & hold the big halo to talk.");
+    appendBubble("assistant", "Hi! I’m VoxTalk. Type or press and hold to talk.");
   </script>
 </body>
 </html>
