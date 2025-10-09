@@ -2,99 +2,82 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <title>VoxTalk™ • Clone 11 Reset</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>VoxTalk™ Mothership</title>
-
-  <!-- Favicon placeholder -->
-  <link rel="icon" href="data:," />
-
-  <!-- Fonts (optional) -->
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
-  <!-- ✅ Correct CSS link -->
-  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-  <div class="page">
+  <!-- Header -->
+  <header class="topbar">
+    <h1 class="brand">VoxTalk<sup>™</sup></h1>
+    <nav class="nav-buttons">
+      <button class="pill ghost" onclick="openModal && openModal('cartModal')">Cart</button>
+      <button class="pill ghost" onclick="openModal && openModal('infoModal')">Info</button>
+      <button class="pill ghost" onclick="openModal && openModal('checkoutModal')">Checkout</button>
+    </nav>
+  </header>
 
-    <!-- HERO TITLE -->
-    <header class="hero" role="banner">
-      <h1 class="brand" aria-label="VoxTalk Mothership">VoxTalk™</h1>
+  <!-- Halo -->
+  <main class="stage">
+    <button id="haloBtn" class="halo-btn" aria-pressed="false">
+      <div class="halo ring r1"></div>
+      <div class="halo ring r2"></div>
+      <div class="halo ring r3"></div>
+      <span class="halo-label">Click&nbsp;to&nbsp;Talk</span>
+    </button>
+  </main>
 
-      <!-- TOP BAR NAV -->
-      <nav class="top-nav" aria-label="Primary navigation">
-        <button class="nav-btn" type="button" aria-label="Cart">Cart</button>
-        <button class="nav-btn" type="button" aria-label="Info">Info</button>
-        <button class="nav-btn" type="button" aria-label="Checkout">Checkout</button>
-      </nav>
-    </header>
+  <!-- Soft Chat (text-only) -->
+  <section class="quiet">
+    <form id="quietForm" class="quiet-form" autocomplete="off">
+      <input id="quietInput" class="quiet-input" type="text"
+             placeholder="Soft Chat — type your question..." />
+      <div class="quiet-controls">
+        <button id="micBtn" class="pill mic-btn" type="button" aria-label="Microphone">🎤</button>
+        <button id="sendBtn" class="pill send-btn" type="submit">Send</button>
+      </div>
+    </form>
+    <div id="thread" class="thread"></div>
+  </section>
 
-    <!-- CENTER: HALO BUTTON -->
-    <main class="center" role="main">
-      <button class="ptt" type="button" aria-pressed="false" aria-label="Click to Talk">
-        <span class="halo" aria-hidden="true"></span>
-        <span class="ptt-label">Click to Talk</span>
-      </button>
+  <!-- Corner Buttons -->
+  <button id="printBtn" class="corner-btn left" onclick="window.print()">Print Conversation</button>
+  <a id="humanBtn" class="corner-btn right" href="tel:18005551234">Contact Human</a>
 
-      <!-- CLASSIC CHAT BAR -->
-      <form class="classic-chat" role="search" aria-label="Classic Chat (static prototype)" onsubmit="return false;">
-        <label class="visually-hidden" for="chatInput">Classic Chat</label>
-        <input
-          id="chatInput"
-          class="chat-input"
-          type="text"
-          inputmode="text"
-          placeholder="Classic Chat — type your question here"
-          autocomplete="off"
-        />
-        <div class="chat-actions">
-          <button class="icon-btn" type="button" aria-label="Use microphone">
-            <!-- mic icon -->
-            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-              <path
-                d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0M12 19v3m-4 0h8"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </button>
-
-          <button class="icon-btn send" type="button" aria-label="Send message">
-            <!-- send icon -->
-            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-              <path
-                d="M22 2 11 13"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linecap="round"
-              />
-              <path
-                d="M22 2 15 22l-4-9-9-4 20-7z"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.6"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </button>
-        </div>
-      </form>
-    </main>
-
-    <!-- FOOTER CORNERS -->
-    <footer class="footer" role="contentinfo">
-      <a class="footer-link left" href="#" role="button">Print Conversation</a>
-      <a class="footer-link right" href="#" role="button" aria-label="Contact Human by phone">
-        Contact Human • (555) 555-5555
-      </a>
-    </footer>
+  <!-- ---------- Modals (unchanged placeholders) ---------- -->
+  <div id="cartModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Cart</h2>
+      <p>Cart preview goes here. (Demo content)</p>
+      <button class="pill" onclick="closeModal('cartModal')">Close</button>
+    </div>
   </div>
 
-  <!-- No scripts: static visual baseline only -->
+  <div id="checkoutModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Checkout</h2>
+      <p>Checkout preview goes here. (Demo content)</p>
+      <button class="pill" onclick="closeModal('checkoutModal')">Close</button>
+    </div>
+  </div>
+
+  <div id="infoModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>About VoxTalk</h2>
+      <p>Talk or type — whichever you prefer. VoxTalk aims to be a calm, capable partner.</p>
+      <p class="note">Click outside this box to return.</p>
+      <button class="pill" onclick="closeModal('infoModal')">Close</button>
+    </div>
+  </div>
+
+  <!-- Minimal modal JS kept inline so buttons still work -->
+  <script>
+    function openModal(id){ const el = document.getElementById(id); if(el) el.classList.remove('hidden'); }
+    function closeModal(id){ const el = document.getElementById(id); if(el) el.classList.add('hidden'); }
+    document.querySelectorAll('.modal').forEach(m =>
+      m.addEventListener('click', e => { if(e.target === m) m.classList.add('hidden'); })
+    );
+  </script>
 </body>
 </html>
