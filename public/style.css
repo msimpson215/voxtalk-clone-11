@@ -14,22 +14,27 @@ body{
   color:var(--ink);
   background:radial-gradient(1200px 800px at 50% -200px,#16305a 0%,var(--bg) 40%,var(--bg) 100%);
   display:flex;flex-direction:column;align-items:center;
+  font-size:13px;            /* overall base bump for readability */
 }
 
 /* Header */
 .topbar{
-  display:flex;flex-direction:column;align-items:center;gap:8px;
-  padding-top:14px;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  padding-top:16px;
 }
 .brand{
-  font-size:1.7rem;letter-spacing:1.5px;color:var(--accent-2);
-  text-shadow:0 0 10px color-mix(in oklab,var(--accent-2) 50%,transparent);
+  font-size:2rem;letter-spacing:1.5px;color:var(--accent-2);
+  text-shadow:0 0 12px color-mix(in oklab,var(--accent-2) 60%,transparent);
 }
-.nav-buttons{display:flex;gap:8px;justify-content:center;}
+.nav-buttons{
+  display:flex;gap:12px;justify-content:center;
+  width:90%;max-width:420px;
+}
 .pill{
+  flex:1;text-align:center;
   background:#132238;color:var(--ink);border:1px solid #1c2a48;
-  border-radius:999px;padding:8px 14px;font-weight:600;
-  font-size:0.9rem;box-shadow:var(--shadow);cursor:pointer;
+  border-radius:999px;padding:10px 16px;font-weight:600;
+  font-size:1rem;box-shadow:var(--shadow);cursor:pointer;
 }
 .pill:hover{filter:brightness(1.1)}
 .pill.ghost{background:#0f1830;border-color:#223055}
@@ -37,10 +42,10 @@ body{
 /* Halo */
 .stage{
   flex:0 0 auto;display:flex;align-items:center;justify-content:center;
-  height:45vh; /* taller center area for mobile */
+  height:45vh;
 }
 .halo-btn{
-  position:relative;width:160px;height:160px;border-radius:50%;border:none;
+  position:relative;width:180px;height:180px;border-radius:50%;border:none;
   background:radial-gradient(60% 60% at 50% 40%,#1d3b63,#0f1d33 60%,#0b1427 100%);
   box-shadow:inset 0 0 40px #0a1b35,0 10px 50px rgba(0,0,0,.6);
   cursor:pointer;
@@ -62,16 +67,14 @@ body{
   box-shadow:inset 0 0 50px #0e2a54,0 0 140px color-mix(in oklab,var(--halo) 60%,transparent);
 }
 
-/* Quiet mode (lowered for halo breathing room) */
+/* Quiet mode */
 .quiet{
-  max-width:920px;width:92%;
-  margin-top:30px; /* adds extra space below halo */
-  margin-bottom:80px;
-  display:flex;flex-direction:column;gap:12px;
+  max-width:920px;width:92%;margin-top:40px;margin-bottom:90px;
+  display:flex;flex-direction:column;gap:14px;
 }
 .quiet-form{
-  display:flex;gap:8px;background:linear-gradient(180deg,#0d1428,#0a1121);
-  border:1px solid #1b2a4f;border-radius:16px;padding:8px;
+  display:flex;gap:10px;background:linear-gradient(180deg,#0d1428,#0a1121);
+  border:1px solid #1b2a4f;border-radius:16px;padding:10px;
   align-items:center;box-shadow:var(--shadow);
 }
 .quiet-input{
@@ -79,28 +82,39 @@ body{
   font-size:1rem;padding:10px 10px;
 }
 .quiet-input::placeholder{color:#cfe4ff;opacity:0.9;}
-.quiet-mic{
-  width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
-  background:#122143;color:#cfe4ff;border:1px solid #244173;cursor:pointer;
-}
 .thread{display:flex;flex-direction:column;gap:8px;}
 
 /* Corner buttons */
 .corner-btn{
-  position:fixed;bottom:14px;background:#101c33;color:#d7e7ff;
-  border:1px solid #20345e;border-radius:999px;padding:6px 12px;
-  font-weight:600;font-size:0.8rem;cursor:pointer;box-shadow:var(--shadow);
-  z-index:10;text-decoration:none;
+  position:fixed;bottom:16px;background:#101c33;color:#e6ebff;
+  border:1px solid #20345e;border-radius:999px;padding:7px 12px;
+  font-weight:500;font-size:0.85rem;cursor:pointer;
+  box-shadow:var(--shadow);z-index:10;text-decoration:none;
+  line-height:1.2;
 }
-.corner-btn.left{left:12px;}
-.corner-btn.right{right:12px;}
+.corner-btn.left{left:14px;}
+.corner-btn.right{right:14px;}
 .corner-btn:hover{filter:brightness(1.15);}
 
-/* Mobile adjustments */
+/* Print-friendly */
+@media print{
+  body{background:#fff;color:#000}
+  .topbar,.stage,.corner-btn{display:none!important}
+  .quiet{margin:0;max-width:none;width:auto}
+  .quiet-form{display:none}
+}
+
+/* Mobile */
 @media(max-width:600px){
-  .brand{font-size:1.4rem;}
-  .halo-btn{width:130px;height:130px;}
-  .quiet{width:95%;margin-top:24px;margin-bottom:70px;}
-  .pill{padding:6px 10px;font-size:0.8rem;}
-  .corner-btn{font-size:0.75rem;padding:5px 10px;}
+  .brand{font-size:1.8rem;}
+  .halo-btn{width:160px;height:160px;}
+  .pill{font-size:0.95rem;padding:8px 14px;}
+  .corner-btn{font-size:0.9rem;padding:8px 14px;}
+}
+
+/* Laptop and up */
+@media(min-width:1200px){
+  .brand{font-size:2.3rem;}
+  .halo-btn{width:200px;height:200px;}
+  .quiet{max-width:1100px;}
 }
