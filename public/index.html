@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk • Clone 11 Mobile Preview</title>
+  <title>VoxTalk • Clone 11 Balanced Layout v2</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
@@ -13,6 +13,7 @@
     <h1 class="brand">VoxTalk</h1>
     <nav class="nav-buttons">
       <button class="pill ghost">Cart</button>
+      <button class="pill ghost">Info</button>
       <button class="pill ghost">Checkout</button>
     </nav>
   </header>
@@ -27,22 +28,17 @@
     </button>
   </main>
 
-  <!-- Quiet mode -->
+  <!-- Quiet mode (placeholder until we re-wire logic) -->
   <section class="quiet">
     <form id="quietForm" class="quiet-form" autocomplete="off">
       <input id="quietInput" class="quiet-input" type="text" placeholder="Type here (Quiet Mode)..." />
-      <button id="quietMic" type="button" class="quiet-mic" aria-label="Quiet mic">
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21H9v2h6v-2h-2v-3.08A7 7 0 0 0 19 11h-2z" fill="currentColor"/>
-        </svg>
-      </button>
       <button class="pill" type="submit">Send</button>
     </form>
-    <div id="thread" class="thread" aria-live="polite"></div>
+    <div id="thread" class="thread"></div>
   </section>
 
   <!-- Corner buttons -->
   <button id="printBtn" class="corner-btn left">Print Conversation</button>
-  <a id="humanBtn" class="corner-btn right" href="tel:18005551234">Connect to Human Technician</a>
+  <a id="humanBtn" class="corner-btn right" href="tel:18005551234">Contact&nbsp;Human</a>
 </body>
 </html>
