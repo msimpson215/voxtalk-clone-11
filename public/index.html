@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk™ • Clone 11 Reset</title>
+  <title>VoxTalk™ • The Mothership Core</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
@@ -11,28 +11,24 @@
   <!-- Header -->
   <header class="topbar">
     <h1 class="brand">VoxTalk<sup>™</sup></h1>
-    <nav class="nav-buttons">
-      <button class="pill ghost" onclick="openModal && openModal('cartModal')">Cart</button>
-      <button class="pill ghost" onclick="openModal && openModal('infoModal')">Info</button>
-      <button class="pill ghost" onclick="openModal && openModal('checkoutModal')">Checkout</button>
-    </nav>
+    <h2 class="subtitle">The Central Intelligence Layer</h2>
   </header>
 
-  <!-- Halo -->
+  <!-- Halo Core -->
   <main class="stage">
     <button id="haloBtn" class="halo-btn" aria-pressed="false">
       <div class="halo ring r1"></div>
       <div class="halo ring r2"></div>
       <div class="halo ring r3"></div>
-      <span class="halo-label">Click&nbsp;to&nbsp;Talk</span>
+      <span class="halo-label">Click&nbsp;to&nbsp;Activate</span>
     </button>
   </main>
 
-  <!-- Soft Chat (text-only) -->
+  <!-- Classic Chat -->
   <section class="quiet">
     <form id="quietForm" class="quiet-form" autocomplete="off">
       <input id="quietInput" class="quiet-input" type="text"
-             placeholder="Soft Chat — type your question..." />
+             placeholder="Classic Chat — type your question here..." />
       <div class="quiet-controls">
         <button id="micBtn" class="pill mic-btn" type="button" aria-label="Microphone">🎤</button>
         <button id="sendBtn" class="pill send-btn" type="submit">Send</button>
@@ -41,43 +37,16 @@
     <div id="thread" class="thread"></div>
   </section>
 
-  <!-- Corner Buttons -->
-  <button id="printBtn" class="corner-btn left" onclick="window.print()">Print Conversation</button>
-  <a id="humanBtn" class="corner-btn right" href="tel:18005551234">Contact Human</a>
+  <!-- Footer -->
+  <footer class="footer">
+    <p class="tagline">VoxTalk™ — The Calm Center of Every System</p>
+  </footer>
 
-  <!-- ---------- Modals (unchanged placeholders) ---------- -->
-  <div id="cartModal" class="modal hidden">
-    <div class="modal-content">
-      <h2>Cart</h2>
-      <p>Cart preview goes here. (Demo content)</p>
-      <button class="pill" onclick="closeModal('cartModal')">Close</button>
-    </div>
-  </div>
-
-  <div id="checkoutModal" class="modal hidden">
-    <div class="modal-content">
-      <h2>Checkout</h2>
-      <p>Checkout preview goes here. (Demo content)</p>
-      <button class="pill" onclick="closeModal('checkoutModal')">Close</button>
-    </div>
-  </div>
-
-  <div id="infoModal" class="modal hidden">
-    <div class="modal-content">
-      <h2>About VoxTalk</h2>
-      <p>Talk or type — whichever you prefer. VoxTalk aims to be a calm, capable partner.</p>
-      <p class="note">Click outside this box to return.</p>
-      <button class="pill" onclick="closeModal('infoModal')">Close</button>
-    </div>
-  </div>
-
-  <!-- Minimal modal JS kept inline so buttons still work -->
+  <!-- Minimal inline JS -->
   <script>
-    function openModal(id){ const el = document.getElementById(id); if(el) el.classList.remove('hidden'); }
-    function closeModal(id){ const el = document.getElementById(id); if(el) el.classList.add('hidden'); }
-    document.querySelectorAll('.modal').forEach(m =>
-      m.addEventListener('click', e => { if(e.target === m) m.classList.add('hidden'); })
-    );
+    const input=document.getElementById('quietInput');
+    input.addEventListener('focus',()=>input.placeholder='');
+    input.addEventListener('blur',()=>{if(!input.value) input.placeholder='Classic Chat — type your question here...';});
   </script>
 </body>
 </html>
