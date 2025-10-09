@@ -26,12 +26,18 @@ body{
   font-size:2rem;letter-spacing:1.5px;color:var(--accent-2);
   text-shadow:0 0 12px color-mix(in oklab,var(--accent-2) 60%,transparent);
 }
+.brand sup{
+  font-size:0.6em;
+  color:var(--accent-2);
+  margin-left:2px;
+  vertical-align:top;
+}
 .nav-buttons{
   display:flex;gap:12px;justify-content:center;
   width:90%;max-width:420px;
 }
 .nav-buttons .pill{
-  flex:0 0 120px;                      /* equal width on large screens */
+  flex:0 0 120px;
   text-align:center;
   background:#132238;color:var(--ink);border:1px solid #1c2a48;
   border-radius:999px;padding:10px 0;font-weight:600;
@@ -84,6 +90,7 @@ body{
 }
 .quiet-input::placeholder{color:#cfe4ff;opacity:0.9;}
 .thread{display:flex;flex-direction:column;gap:8px;}
+.mic{margin-right:6px;}
 
 /* Corner buttons */
 .corner-btn{
@@ -99,16 +106,31 @@ body{
 .corner-btn.right{right:14px;}
 .corner-btn:hover{filter:brightness(1.15);}
 
+/* Modals */
+.modal{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  display:flex;align-items:center;justify-content:center;
+  z-index:100;backdrop-filter:blur(3px);
+}
+.modal.hidden{display:none;}
+.modal-content{
+  background:#0f172a;color:var(--ink);
+  border:1px solid #244173;border-radius:16px;
+  padding:24px;max-width:500px;width:90%;
+  box-shadow:var(--shadow);text-align:center;
+}
+.modal-content h2{color:var(--accent-2);margin-bottom:10px;}
+
 /* Mobile */
 @media(max-width:600px){
   .brand{font-size:1.8rem;}
-  .nav-buttons .pill{flex:1;}          /* let them flex on small screens */
+  .nav-buttons .pill{flex:1;}
   .halo-btn{width:170px;height:170px;}
   .pill{font-size:0.95rem;padding:8px 0;}
   .corner-btn{font-size:0.9rem;padding:8px 14px;}
 }
 
-/* Laptop and up */
+/* Laptop+ */
 @media(min-width:1200px){
   .brand{font-size:2.3rem;}
   .halo-btn{width:220px;height:220px;}
