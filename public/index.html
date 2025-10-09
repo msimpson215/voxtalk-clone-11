@@ -2,19 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk • Clone 11 Balanced Layout v3</title>
+  <title>VoxTalk • Clone 11 Balanced v4</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Topbar -->
+  <!-- Header -->
   <header class="topbar">
-    <h1 class="brand">VoxTalk</h1>
+    <h1 class="brand">VoxTalk<sup>™</sup></h1>
     <nav class="nav-buttons">
-      <button class="pill ghost">Cart</button>
-      <button class="pill ghost">Info</button>
-      <button class="pill ghost">Checkout</button>
+      <button class="pill ghost" onclick="openModal('cartModal')">Cart</button>
+      <button class="pill ghost" onclick="openModal('infoModal')">Info</button>
+      <button class="pill ghost" onclick="openModal('checkoutModal')">Checkout</button>
     </nav>
   </header>
 
@@ -31,14 +31,51 @@
   <!-- Quiet mode -->
   <section class="quiet">
     <form id="quietForm" class="quiet-form" autocomplete="off">
-      <input id="quietInput" class="quiet-input" type="text" placeholder="Type here…" />
-      <button class="pill" type="submit">Send</button>
+      <input id="quietInput" class="quiet-input" type="text" placeholder="Ask by text (Quiet Mode)..." />
+      <button class="pill" type="submit">
+        <span class="mic">🎤</span> Send
+      </button>
     </form>
     <div id="thread" class="thread"></div>
   </section>
 
   <!-- Corner buttons -->
-  <button id="printBtn" class="corner-btn left">Print Conversation</button>
-  <a id="humanBtn" class="corner-btn right" href="tel:18005551234">Contact&nbsp;Human</a>
+  <button id="printBtn" class="corner-btn left" onclick="window.print()">Print Conversation</button>
+  <a id="humanBtn" class="corner-btn right" href="tel:18005551234">Contact Human</a>
+
+  <!-- ---------- Modals ---------- -->
+  <div id="cartModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Your Cart</h2>
+      <p>This is a sample cart view. Products and totals will appear here once connected to the backend.</p>
+      <button class="pill" onclick="closeModal('cartModal')">Close</button>
+    </div>
+  </div>
+
+  <div id="checkoutModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Checkout</h2>
+      <p>This is a placeholder checkout page. Add billing and shipping fields here later.</p>
+      <button class="pill" onclick="closeModal('checkoutModal')">Close</button>
+    </div>
+  </div>
+
+  <div id="infoModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>About VoxTalk</h2>
+      <p>
+        VoxTalk lets you interact naturally—by voice or text.  
+        Click the blue circle to talk, or use Quiet Mode to type.  
+        Conversations stay private; nothing is shared without consent.
+      </p>
+      <button class="pill" onclick="closeModal('infoModal')">Close</button>
+    </div>
+  </div>
+
+  <!-- ---------- Scripts ---------- -->
+  <script>
+    function openModal(id){ document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id){ document.getElementById(id).classList.add('hidden'); }
+  </script>
 </body>
 </html>
