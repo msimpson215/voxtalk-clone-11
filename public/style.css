@@ -14,7 +14,7 @@ body{
   color:var(--ink);
   background:radial-gradient(1200px 800px at 50% -200px,#16305a 0%,var(--bg) 40%,var(--bg) 100%);
   display:flex;flex-direction:column;align-items:center;
-  font-size:13px;            /* overall base bump for readability */
+  font-size:13px;
 }
 
 /* Header */
@@ -30,22 +30,23 @@ body{
   display:flex;gap:12px;justify-content:center;
   width:90%;max-width:420px;
 }
-.pill{
-  flex:1;text-align:center;
+.nav-buttons .pill{
+  flex:0 0 120px;                      /* equal width on large screens */
+  text-align:center;
   background:#132238;color:var(--ink);border:1px solid #1c2a48;
-  border-radius:999px;padding:10px 16px;font-weight:600;
+  border-radius:999px;padding:10px 0;font-weight:600;
   font-size:1rem;box-shadow:var(--shadow);cursor:pointer;
 }
-.pill:hover{filter:brightness(1.1)}
-.pill.ghost{background:#0f1830;border-color:#223055}
+.nav-buttons .pill:hover{filter:brightness(1.1)}
+.nav-buttons .pill.ghost{background:#0f1830;border-color:#223055}
 
 /* Halo */
 .stage{
   flex:0 0 auto;display:flex;align-items:center;justify-content:center;
-  height:45vh;
+  height:46vh;
 }
 .halo-btn{
-  position:relative;width:180px;height:180px;border-radius:50%;border:none;
+  position:relative;width:200px;height:200px;border-radius:50%;border:none;
   background:radial-gradient(60% 60% at 50% 40%,#1d3b63,#0f1d33 60%,#0b1427 100%);
   box-shadow:inset 0 0 40px #0a1b35,0 10px 50px rgba(0,0,0,.6);
   cursor:pointer;
@@ -86,7 +87,9 @@ body{
 
 /* Corner buttons */
 .corner-btn{
-  position:fixed;bottom:16px;background:#101c33;color:#e6ebff;
+  position:fixed;
+  bottom:clamp(12px,2vh,24px);
+  background:#101c33;color:#e6ebff;
   border:1px solid #20345e;border-radius:999px;padding:7px 12px;
   font-weight:500;font-size:0.85rem;cursor:pointer;
   box-shadow:var(--shadow);z-index:10;text-decoration:none;
@@ -96,25 +99,18 @@ body{
 .corner-btn.right{right:14px;}
 .corner-btn:hover{filter:brightness(1.15);}
 
-/* Print-friendly */
-@media print{
-  body{background:#fff;color:#000}
-  .topbar,.stage,.corner-btn{display:none!important}
-  .quiet{margin:0;max-width:none;width:auto}
-  .quiet-form{display:none}
-}
-
 /* Mobile */
 @media(max-width:600px){
   .brand{font-size:1.8rem;}
-  .halo-btn{width:160px;height:160px;}
-  .pill{font-size:0.95rem;padding:8px 14px;}
+  .nav-buttons .pill{flex:1;}          /* let them flex on small screens */
+  .halo-btn{width:170px;height:170px;}
+  .pill{font-size:0.95rem;padding:8px 0;}
   .corner-btn{font-size:0.9rem;padding:8px 14px;}
 }
 
 /* Laptop and up */
 @media(min-width:1200px){
   .brand{font-size:2.3rem;}
-  .halo-btn{width:200px;height:200px;}
+  .halo-btn{width:220px;height:220px;}
   .quiet{max-width:1100px;}
 }
