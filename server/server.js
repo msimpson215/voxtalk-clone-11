@@ -17,7 +17,7 @@ app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(ROOT, "public"), { extensions: ["html"] }));
 
-// Simple text-only chat proxy to OpenAI Responses API
+// Simple text-only chat proxy
 app.post("/chat", async (req, res) => {
   try {
     const { prompt } = req.body || {};
@@ -27,18 +27,16 @@ app.post("/chat", async (req, res) => {
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ error: "Server missing OPENAI_API_KEY" });
+      return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
     }
 
-    // Lightweight system prompt to keep VoxTalk concise and helpful
     const sys = [
       "You are VoxTalk.",
       "Be concise, clear, and friendly.",
-      "If asked for code, provide minimal runnable snippets.",
-      "If asked for steps, use short, numbered bullets."
+      "If asked for code, provide runnable snippets.",
+      "If asked for steps, use short numbered bullets."
     ].join(" ");
 
-    // Using Responses API (json output)
     const resp = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -50,17 +48,16 @@ app.post("/chat", async (req, res) => {
         input: [
           { role: "system", content: sys },
           { role: "user", content: prompt }
-        ],
+        ]
       })
     });
 
     if (!resp.ok) {
-      const text = await resp.text().catch(()=>"");
+      const text = await resp.text().catch(() => "");
       return res.status(resp.status).json({ error: `OpenAI error: ${text || resp.statusText}` });
     }
 
     const data = await resp.json();
-    // Responses API returns "output_text" convenience field
     const reply = data.output_text || "I’m here.";
     return res.json({ reply });
   } catch (err) {
@@ -69,12 +66,12 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-// Fallback to index.html for root
+// Fallback to index.html
 app.get("/", (_req, res) => {
   res.sendFile(path.join(ROOT, "public", "index.html"));
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`VoxTalk Core Clean v1 running on http://localhost:${PORT}`);
+  console.log(`✅ VoxTalk™ Clone-11 running on http://localhost:${PORT}`);
 });
