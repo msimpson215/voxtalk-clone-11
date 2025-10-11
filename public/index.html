@@ -2,53 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk™ Clone-11 v2 (Fixed Layout)</title>
+  <title>VoxTalk™ Clone-11 Checkout Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="style.css" />
-  <style>
-    /* Quick structural corrections */
-    body { margin:0; background:radial-gradient(1000px 700px at 50% -150px,#16305a 0%,#0b1220 60%); 
-           color:#e6ebff; font-family:system-ui,Segoe UI,Roboto,sans-serif; display:flex; flex-direction:column; min-height:100vh; }
-    header.topbar { text-align:center; padding-top:1rem; }
-    .brand { font-size:2.3rem; font-weight:700; color:#70c0ff; margin:0; }
-    .nav-buttons { display:flex; gap:12px; justify-content:center; margin:12px 0 20px; }
-    .pill { border-radius:999px; border:1px solid #223055; padding:8px 20px; background:#0f1830; color:#e6ebff; cursor:pointer; }
-    .pill.ghost { background:#0e1628; }
-
-    main.stage {
-      flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
-      position:relative; padding-bottom:60px;
-    }
-    .halo-btn { position:relative; width:200px; height:200px; border:none; border-radius:50%;
-                background:radial-gradient(60% 60% at 50% 40%,#1d3b63,#0f1d33 70%); cursor:pointer; margin-top:40px; }
-    .halo { position:absolute; inset:-8px; border-radius:50%; border:2px solid #61b8ff;
-            animation:pulse 3s ease-in-out infinite; }
-    .r2{inset:-18px;opacity:.6;animation-duration:3.4s;}
-    .r3{inset:-28px;opacity:.4;animation-duration:3.8s;}
-    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-    .halo-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-weight:700;color:#dff0ff;}
-
-    .stop-btn{margin-top:20px;background:#222f45;color:#fff;border:1px solid #355;border-radius:999px;padding:8px 16px;cursor:pointer;}
-    .hidden{display:none;}
-
-    section.quiet { width:92%; max-width:900px; margin:40px auto 80px; }
-    .quiet-form { display:flex; align-items:center; gap:8px; border:1px solid #1b2a4f; border-radius:14px; padding:6px 8px; background:#0d1428; }
-    .quiet-input { flex:1; background:transparent; border:none; color:#e6ebff; font-size:1rem; padding:8px; }
-    .send-btn { background:#142a4d; border:1px solid #2b4b7b; color:#70c0ff; border-radius:999px; padding:8px 14px; }
-    .thread { margin-top:10px; display:flex; flex-direction:column; gap:6px; font-size:0.95rem; }
-    .thread div { padding:4px 6px; background:#0f1830; border-radius:6px; }
-
-    .corner-btn { position:fixed; bottom:20px; background:#101c33; color:#e6ebff; border:1px solid #20345e;
-                  border-radius:999px; padding:7px 12px; font-size:0.85rem; text-decoration:none; z-index:999; }
-    .corner-btn.left{left:14px;} .corner-btn.right{right:14px;}
-
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);z-index:100;}
-    .modal.hidden{display:none;}
-    .modal-content{background:#0f172a;color:#e6ebff;border:1px solid #244173;border-radius:16px;padding:24px;max-width:500px;width:90%;text-align:center;}
-    .modal-content h2{color:#70c0ff;}
-    .modal-content input{width:90%;margin:8px 0;padding:8px;border-radius:8px;border:1px solid #244173;background:#0d1428;color:#e6ebff;}
-    .note{font-size:0.85rem;color:#b4cfff;margin-top:10px;}
-  </style>
+  <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
   <header class="topbar">
@@ -74,7 +31,9 @@
   <section class="quiet">
     <form id="quietForm" class="quiet-form" autocomplete="off">
       <input id="quietInput" class="quiet-input" type="text" placeholder="Classic Chat — type your question here..." />
-      <div class="quiet-controls"><button id="sendBtn" class="pill send-btn" type="submit">Send</button></div>
+      <div class="quiet-controls">
+        <button id="sendBtn" class="pill send-btn" type="submit">Send</button>
+      </div>
     </form>
     <div id="thread" class="thread"></div>
   </section>
@@ -86,7 +45,9 @@
   <div id="cartModal" class="modal hidden">
     <div class="modal-content">
       <h2>Your Cart</h2>
-      <p>No items yet. Add something from the store to see it here.</p>
+      <p><strong>1 × Pre-De-Icer Demo Bottle</strong></p>
+      <p>Price: <strong>$9.99</strong></p>
+      <button class="pill" onclick="startCheckout({itemName:'Pre-De-Icer Demo Bottle',amount_cents:999})">Checkout Now</button>
       <button class="pill" onclick="closeModal('cartModal')">Close</button>
     </div>
   </div>
@@ -95,9 +56,14 @@
   <div id="infoModal" class="modal hidden">
     <div class="modal-content">
       <h2>About VoxTalk</h2>
-      <p>VoxTalk™ lets your customers talk or type naturally — just like chatting with a person.  
-      It works across stores, help desks, and service pages, combining voice and text into one calm, connected experience.</p>
-      <p class="note">Click outside this box to return.</p>
+      <p>VoxTalk™ is a plug-in voice + chat assistant you can add to any website or app. Talk or type — it helps customers find products, check out, or get help faster.</p>
+      <h3>How to use</h3>
+      <ol style="text-align:left;max-width:420px;margin:0 auto">
+        <li>Click the halo to start voice (allow microphone if prompted).</li>
+        <li>Use the chat box to type a question.</li>
+        <li>Open Checkout → fill card details → submit (test mode uses card 4242 4242 4242 4242).</li>
+      </ol>
+      <p class="note">Demo only: to process real payments, configure Stripe keys in your server .env.</p>
       <button class="pill" onclick="closeModal('infoModal')">Close</button>
     </div>
   </div>
@@ -105,59 +71,115 @@
   <!-- CHECKOUT -->
   <div id="checkoutModal" class="modal hidden">
     <div class="modal-content">
-      <h2>Checkout</h2>
-      <form id="checkoutForm">
-        <input type="text" placeholder="Full Name" required />
-        <input type="text" placeholder="Card Number" maxlength="16" required />
-        <input type="text" placeholder="Expiration (MM/YY)" maxlength="5" required />
-        <input type="text" placeholder="ZIP Code" maxlength="10" required />
-        <button type="submit" class="pill">Submit Payment</button>
+      <h2>Checkout (Demo)</h2>
+      <p>Buy a demo bottle to try a full flow.</p>
+      <form id="checkoutForm" onsubmit="handleCheckout(event)">
+        <input id="name" type="text" placeholder="Full name" required />
+        <input id="email" type="email" placeholder="Email (receipt goes here)" required />
+        <div style="margin-top:8px">
+          <label style="font-size:0.9rem;display:block;margin-bottom:6px">Card details (test only)</label>
+          <input id="fakeCard" type="text" placeholder="4242 4242 4242 4242" value="4242 4242 4242 4242" required />
+        </div>
+        <button class="pill" type="submit" style="margin-top:12px">Pay $9.99</button>
       </form>
       <button class="pill" style="margin-top:10px" onclick="closeModal('checkoutModal')">Cancel</button>
     </div>
   </div>
 
   <script>
-    // Modal logic
+    // --- Modal helpers
     function openModal(id){ document.getElementById(id)?.classList.remove("hidden"); }
     function closeModal(id){ document.getElementById(id)?.classList.add("hidden"); }
-    document.querySelectorAll(".modal").forEach(m =>
-      m.addEventListener("click", e => { if(e.target===m) m.classList.add("hidden"); })
-    );
+    document.querySelectorAll(".modal").forEach(m => m.addEventListener("click", e => { if(e.target===m) m.classList.add("hidden"); }));
 
-    // Voice setup
-    const haloBtn=document.getElementById("haloBtn"),stopBtn=document.getElementById("stopBtn"),remote=document.getElementById("remote");
-    let pc,localStream;
-    haloBtn.onclick=async()=>{
-      haloBtn.disabled=true;haloBtn.querySelector(".halo-label").textContent="Connecting...";
-      const resp=await fetch("/session",{method:"POST"});const data=await resp.json();
-      if(!data?.client_secret?.value) return;
-      pc=new RTCPeerConnection();pc.ontrack=(e)=>remote.srcObject=e.streams[0];
-      localStream=await navigator.mediaDevices.getUserMedia({audio:true});
-      localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
-      const offer=await pc.createOffer();await pc.setLocalDescription(offer);
-      const r2=await fetch("https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview",{
-        method:"POST",
-        headers:{Authorization:`Bearer ${data.client_secret.value}`,"Content-Type":"application/sdp"},
-        body:offer.sdp
-      });
-      const answer={type:"answer",sdp:await r2.text()};
-      await pc.setRemoteDescription(answer);
-      haloBtn.querySelector(".halo-label").textContent="Live";stopBtn.classList.remove("hidden");
+    // --- Voice wiring (same as baseline)
+    const haloBtn = document.getElementById("haloBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const remote = document.getElementById("remote");
+    let pc, localStream;
+
+    haloBtn.onclick = async () => {
+      haloBtn.disabled = true;
+      haloBtn.querySelector(".halo-label").textContent = "Connecting...";
+      try {
+        const resp = await fetch("/session", { method: "POST" });
+        const data = await resp.json();
+        if (!data?.client_secret?.value) throw new Error("No client secret");
+        pc = new RTCPeerConnection();
+        pc.ontrack = (e) => remote.srcObject = e.streams[0];
+        localStream = await navigator.mediaDevices.getUserMedia({ audio:true });
+        localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        const r2 = await fetch("https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview", {
+          method:"POST",
+          headers:{ Authorization:`Bearer ${data.client_secret.value}`, "Content-Type":"application/sdp" },
+          body:offer.sdp
+        });
+        const answer = { type:"answer", sdp: await r2.text() };
+        await pc.setRemoteDescription(answer);
+        haloBtn.querySelector(".halo-label").textContent = "Live";
+        stopBtn.classList.remove("hidden");
+      } catch (err) {
+        console.error("voice error", err);
+        haloBtn.querySelector(".halo-label").textContent = "Click to Talk";
+        haloBtn.disabled = false;
+      }
     };
-    stopBtn.onclick=()=>{if(localStream){localStream.getTracks().forEach(t=>t.stop());}if(pc){pc.close();}
-      haloBtn.disabled=false;haloBtn.querySelector(".halo-label").textContent="Click to Talk";stopBtn.classList.add("hidden");};
 
-    // Classic chat
-    const form=document.getElementById("quietForm"),input=document.getElementById("quietInput"),thread=document.getElementById("thread");
-    form.onsubmit=async(e)=>{
+    stopBtn.onclick = () => {
+      if (localStream) localStream.getTracks().forEach(t=>t.stop());
+      if (pc) pc.close();
+      haloBtn.disabled = false;
+      haloBtn.querySelector(".halo-label").textContent = "Click to Talk";
+      stopBtn.classList.add("hidden");
+    };
+
+    // --- Classic chat
+    const form = document.getElementById("quietForm");
+    const input = document.getElementById("quietInput");
+    const thread = document.getElementById("thread");
+    form.onsubmit = async (e) => {
       e.preventDefault();
-      const text=input.value.trim(); if(!text) return;
-      const userDiv=document.createElement("div"); userDiv.textContent="🧍 "+text; thread.appendChild(userDiv); input.value="";
-      const resp=await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:text})});
-      const data=await resp.json(); const botDiv=document.createElement("div");
-      botDiv.textContent="🤖 "+(data.reply||"..."); thread.appendChild(botDiv); thread.scrollTop=thread.scrollHeight;
+      const text = input.value.trim();
+      if (!text) return;
+      const userDiv = document.createElement("div"); userDiv.textContent = "🧍 " + text; thread.appendChild(userDiv);
+      input.value = "";
+      const resp = await fetch("/chat", { method:"POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ prompt: text }) });
+      const data = await resp.json();
+      const botDiv = document.createElement("div"); botDiv.textContent = "🤖 " + (data.reply || "...");
+      thread.appendChild(botDiv);
+      thread.scrollTop = thread.scrollHeight;
     };
+
+    // --- Checkout flow (calls server to create Stripe Checkout session)
+    async function startCheckout(item = { itemName: "Pre-De-Icer Demo Bottle", amount_cents: 999 }) {
+      try {
+        // POST to server to create session
+        const resp = await fetch("/create-checkout-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item)
+        });
+        const data = await resp.json();
+        if (!data.sessionId) return alert("Stripe not configured on server. Check .env.");
+
+        // Use returned publishable key or fallback (server included publishableKey)
+        const stripe = Stripe(data.publishableKey || "");
+        await stripe.redirectToCheckout({ sessionId: data.sessionId });
+      } catch (err) {
+        console.error("checkout start error", err);
+        alert("Could not start checkout. See console for details.");
+      }
+    }
+
+    // Wired to cart button in cart modal and checkout form submit
+    async function handleCheckout(e) {
+      e.preventDefault();
+      const name = document.getElementById("name").value || "Demo buyer";
+      const email = document.getElementById("email").value || "";
+      await startCheckout({ itemName: `Pre-De-Icer Demo - ${name}`, amount_cents: 999 });
+    }
   </script>
 </body>
 </html>
