@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk™ • Clone 11 Reset</title>
+  <title>VoxTalk™ • Clone 11 Connected</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
@@ -71,15 +71,57 @@
     </div>
   </div>
 
+  <!-- ---------- Scripts ---------- -->
   <script>
+    // Modal handling
     function openModal(id){ const el=document.getElementById(id); if(el) el.classList.remove('hidden'); }
     function closeModal(id){ const el=document.getElementById(id); if(el) el.classList.add('hidden'); }
     document.querySelectorAll('.modal').forEach(m =>
       m.addEventListener('click', e => { if(e.target===m) m.classList.add('hidden'); })
     );
+
+    // Placeholder logic
     const input=document.getElementById('quietInput');
     input.addEventListener('focus',()=>input.placeholder='');
     input.addEventListener('blur',()=>{if(!input.value) input.placeholder='Classic Chat — type your question here...';});
+
+    // ----- Chat Connection -----
+    const form = document.getElementById("quietForm");
+    const inputEl = document.getElementById("quietInput");
+    const threadEl = document.getElementById("thread");
+    const sendBtn = document.getElementById("sendBtn");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const prompt = inputEl.value.trim();
+      if (!prompt) return;
+
+      appendLine("user", prompt);
+      inputEl.value = "";
+      sendBtn.disabled = true;
+
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt })
+        });
+        const data = await res.json();
+        appendLine("vox", data.reply || "No reply received.");
+      } catch (err) {
+        appendLine("vox", "⚠️ Connection error — try again.");
+      } finally {
+        sendBtn.disabled = false;
+      }
+    });
+
+    function appendLine(role, text) {
+      const line = document.createElement("div");
+      line.className = "msg " + role;
+      line.textContent = (role === "user" ? "You: " : "VoxTalk: ") + text;
+      threadEl.appendChild(line);
+      threadEl.scrollTop = threadEl.scrollHeight;
+    }
   </script>
 </body>
 </html>
