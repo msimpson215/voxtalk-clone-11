@@ -2,9 +2,53 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk™ Clone-11 v2</title>
+  <title>VoxTalk™ Clone-11 v2 (Fixed Layout)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Quick structural corrections */
+    body { margin:0; background:radial-gradient(1000px 700px at 50% -150px,#16305a 0%,#0b1220 60%); 
+           color:#e6ebff; font-family:system-ui,Segoe UI,Roboto,sans-serif; display:flex; flex-direction:column; min-height:100vh; }
+    header.topbar { text-align:center; padding-top:1rem; }
+    .brand { font-size:2.3rem; font-weight:700; color:#70c0ff; margin:0; }
+    .nav-buttons { display:flex; gap:12px; justify-content:center; margin:12px 0 20px; }
+    .pill { border-radius:999px; border:1px solid #223055; padding:8px 20px; background:#0f1830; color:#e6ebff; cursor:pointer; }
+    .pill.ghost { background:#0e1628; }
+
+    main.stage {
+      flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      position:relative; padding-bottom:60px;
+    }
+    .halo-btn { position:relative; width:200px; height:200px; border:none; border-radius:50%;
+                background:radial-gradient(60% 60% at 50% 40%,#1d3b63,#0f1d33 70%); cursor:pointer; margin-top:40px; }
+    .halo { position:absolute; inset:-8px; border-radius:50%; border:2px solid #61b8ff;
+            animation:pulse 3s ease-in-out infinite; }
+    .r2{inset:-18px;opacity:.6;animation-duration:3.4s;}
+    .r3{inset:-28px;opacity:.4;animation-duration:3.8s;}
+    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+    .halo-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-weight:700;color:#dff0ff;}
+
+    .stop-btn{margin-top:20px;background:#222f45;color:#fff;border:1px solid #355;border-radius:999px;padding:8px 16px;cursor:pointer;}
+    .hidden{display:none;}
+
+    section.quiet { width:92%; max-width:900px; margin:40px auto 80px; }
+    .quiet-form { display:flex; align-items:center; gap:8px; border:1px solid #1b2a4f; border-radius:14px; padding:6px 8px; background:#0d1428; }
+    .quiet-input { flex:1; background:transparent; border:none; color:#e6ebff; font-size:1rem; padding:8px; }
+    .send-btn { background:#142a4d; border:1px solid #2b4b7b; color:#70c0ff; border-radius:999px; padding:8px 14px; }
+    .thread { margin-top:10px; display:flex; flex-direction:column; gap:6px; font-size:0.95rem; }
+    .thread div { padding:4px 6px; background:#0f1830; border-radius:6px; }
+
+    .corner-btn { position:fixed; bottom:20px; background:#101c33; color:#e6ebff; border:1px solid #20345e;
+                  border-radius:999px; padding:7px 12px; font-size:0.85rem; text-decoration:none; z-index:999; }
+    .corner-btn.left{left:14px;} .corner-btn.right{right:14px;}
+
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);z-index:100;}
+    .modal.hidden{display:none;}
+    .modal-content{background:#0f172a;color:#e6ebff;border:1px solid #244173;border-radius:16px;padding:24px;max-width:500px;width:90%;text-align:center;}
+    .modal-content h2{color:#70c0ff;}
+    .modal-content input{width:90%;margin:8px 0;padding:8px;border-radius:8px;border:1px solid #244173;background:#0d1428;color:#e6ebff;}
+    .note{font-size:0.85rem;color:#b4cfff;margin-top:10px;}
+  </style>
 </head>
 <body>
   <header class="topbar">
@@ -29,11 +73,8 @@
 
   <section class="quiet">
     <form id="quietForm" class="quiet-form" autocomplete="off">
-      <input id="quietInput" class="quiet-input" type="text"
-             placeholder="Classic Chat — type your question here..." />
-      <div class="quiet-controls">
-        <button id="sendBtn" class="pill send-btn" type="submit">Send</button>
-      </div>
+      <input id="quietInput" class="quiet-input" type="text" placeholder="Classic Chat — type your question here..." />
+      <div class="quiet-controls"><button id="sendBtn" class="pill send-btn" type="submit">Send</button></div>
     </form>
     <div id="thread" class="thread"></div>
   </section>
@@ -41,98 +82,82 @@
   <button class="corner-btn left" onclick="window.print()">Print Conversation</button>
   <a class="corner-btn right" href="tel:18005551234">Contact Human</a>
 
-  <!-- CART / INFO / CHECKOUT MODALS -->
+  <!-- CART -->
   <div id="cartModal" class="modal hidden">
     <div class="modal-content">
-      <h2>Cart</h2><p>Your cart is empty. (Demo only)</p>
+      <h2>Your Cart</h2>
+      <p>No items yet. Add something from the store to see it here.</p>
       <button class="pill" onclick="closeModal('cartModal')">Close</button>
     </div>
   </div>
+
+  <!-- INFO -->
   <div id="infoModal" class="modal hidden">
     <div class="modal-content">
       <h2>About VoxTalk</h2>
-      <p>Talk or type — your calm AI partner for websites and stores.</p>
+      <p>VoxTalk™ lets your customers talk or type naturally — just like chatting with a person.  
+      It works across stores, help desks, and service pages, combining voice and text into one calm, connected experience.</p>
       <p class="note">Click outside this box to return.</p>
       <button class="pill" onclick="closeModal('infoModal')">Close</button>
     </div>
   </div>
+
+  <!-- CHECKOUT -->
   <div id="checkoutModal" class="modal hidden">
     <div class="modal-content">
-      <h2>Checkout</h2><p>Checkout flow coming soon.</p>
-      <button class="pill" onclick="closeModal('checkoutModal')">Close</button>
+      <h2>Checkout</h2>
+      <form id="checkoutForm">
+        <input type="text" placeholder="Full Name" required />
+        <input type="text" placeholder="Card Number" maxlength="16" required />
+        <input type="text" placeholder="Expiration (MM/YY)" maxlength="5" required />
+        <input type="text" placeholder="ZIP Code" maxlength="10" required />
+        <button type="submit" class="pill">Submit Payment</button>
+      </form>
+      <button class="pill" style="margin-top:10px" onclick="closeModal('checkoutModal')">Cancel</button>
     </div>
   </div>
 
   <script>
-  // Modal open/close
-  function openModal(id){ document.getElementById(id)?.classList.remove("hidden"); }
-  function closeModal(id){ document.getElementById(id)?.classList.add("hidden"); }
-  document.querySelectorAll(".modal").forEach(m =>
-    m.addEventListener("click", e => { if(e.target===m) m.classList.add("hidden"); })
-  );
+    // Modal logic
+    function openModal(id){ document.getElementById(id)?.classList.remove("hidden"); }
+    function closeModal(id){ document.getElementById(id)?.classList.add("hidden"); }
+    document.querySelectorAll(".modal").forEach(m =>
+      m.addEventListener("click", e => { if(e.target===m) m.classList.add("hidden"); })
+    );
 
-  // 🔵 Voice setup
-  const haloBtn = document.getElementById("haloBtn");
-  const stopBtn = document.getElementById("stopBtn");
-  const remote = document.getElementById("remote");
-  let pc, localStream;
+    // Voice setup
+    const haloBtn=document.getElementById("haloBtn"),stopBtn=document.getElementById("stopBtn"),remote=document.getElementById("remote");
+    let pc,localStream;
+    haloBtn.onclick=async()=>{
+      haloBtn.disabled=true;haloBtn.querySelector(".halo-label").textContent="Connecting...";
+      const resp=await fetch("/session",{method:"POST"});const data=await resp.json();
+      if(!data?.client_secret?.value) return;
+      pc=new RTCPeerConnection();pc.ontrack=(e)=>remote.srcObject=e.streams[0];
+      localStream=await navigator.mediaDevices.getUserMedia({audio:true});
+      localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+      const offer=await pc.createOffer();await pc.setLocalDescription(offer);
+      const r2=await fetch("https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview",{
+        method:"POST",
+        headers:{Authorization:`Bearer ${data.client_secret.value}`,"Content-Type":"application/sdp"},
+        body:offer.sdp
+      });
+      const answer={type:"answer",sdp:await r2.text()};
+      await pc.setRemoteDescription(answer);
+      haloBtn.querySelector(".halo-label").textContent="Live";stopBtn.classList.remove("hidden");
+    };
+    stopBtn.onclick=()=>{if(localStream){localStream.getTracks().forEach(t=>t.stop());}if(pc){pc.close();}
+      haloBtn.disabled=false;haloBtn.querySelector(".halo-label").textContent="Click to Talk";stopBtn.classList.add("hidden");};
 
-  haloBtn.onclick = async () => {
-    haloBtn.disabled = true;
-    haloBtn.querySelector(".halo-label").textContent = "Connecting...";
-    const resp = await fetch("/session", { method: "POST" });
-    const data = await resp.json();
-    if (!data?.client_secret?.value) return;
-
-    pc = new RTCPeerConnection();
-    pc.ontrack = (e)=>remote.srcObject=e.streams[0];
-    localStream = await navigator.mediaDevices.getUserMedia({ audio:true });
-    localStream.getTracks().forEach(t=>pc.addTrack(t, localStream));
-
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    const r2 = await fetch("https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview", {
-      method:"POST",
-      headers:{
-        Authorization:`Bearer ${data.client_secret.value}`,
-        "Content-Type":"application/sdp"
-      },
-      body:offer.sdp
-    });
-    const answer={type:"answer",sdp:await r2.text()};
-    await pc.setRemoteDescription(answer);
-    haloBtn.querySelector(".halo-label").textContent="Live";
-    stopBtn.classList.remove("hidden");
-  };
-
-  // 🟥 Stop Voice
-  stopBtn.onclick = ()=>{
-    if(localStream){ localStream.getTracks().forEach(t=>t.stop()); }
-    if(pc){ pc.close(); }
-    haloBtn.disabled=false;
-    haloBtn.querySelector(".halo-label").textContent="Click to Talk";
-    stopBtn.classList.add("hidden");
-  };
-
-  // 🟢 Classic Chat
-  const form=document.getElementById("quietForm");
-  const input=document.getElementById("quietInput");
-  const thread=document.getElementById("thread");
-  form.onsubmit=async(e)=>{
-    e.preventDefault();
-    const text=input.value.trim();
-    if(!text) return;
-    const userDiv=document.createElement("div");
-    userDiv.textContent="🧍 "+text;
-    thread.appendChild(userDiv);
-    input.value="";
-    const resp=await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:text})});
-    const data=await resp.json();
-    const botDiv=document.createElement("div");
-    botDiv.textContent="🤖 "+(data.reply||"...");
-    thread.appendChild(botDiv);
-    thread.scrollTop=thread.scrollHeight;
-  };
+    // Classic chat
+    const form=document.getElementById("quietForm"),input=document.getElementById("quietInput"),thread=document.getElementById("thread");
+    form.onsubmit=async(e)=>{
+      e.preventDefault();
+      const text=input.value.trim(); if(!text) return;
+      const userDiv=document.createElement("div"); userDiv.textContent="🧍 "+text; thread.appendChild(userDiv); input.value="";
+      const resp=await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:text})});
+      const data=await resp.json(); const botDiv=document.createElement("div");
+      botDiv.textContent="🤖 "+(data.reply||"..."); thread.appendChild(botDiv); thread.scrollTop=thread.scrollHeight;
+    };
   </script>
 </body>
 </html>
