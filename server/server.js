@@ -1,77 +1,48 @@
 import express from "express";
-import path from "path";
-import { fileURLToPath } from "url";
 import dotenv from "dotenv";
-import cors from "cors";
 import fetch from "node-fetch";
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const ROOT = path.resolve(__dirname, "..");
 const app = express();
+app.use(express.static("public"));
 
-app.use(cors());
-app.use(express.json({ limit: "2mb" }));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(ROOT, "public"), { extensions: ["html"] }));
+// Health check (optional)
+app.get("/health", (req, res) => res.json({ ok: true, ts: Date.now() }));
 
-// Simple text-only chat proxy
-app.post("/chat", async (req, res) => {
+app.post("/session", async (_req, res) => {
   try {
-    const { prompt } = req.body || {};
-    if (!prompt || typeof prompt !== "string") {
-      return res.status(400).json({ error: "Missing prompt" });
-    }
-
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
-    }
-
-    const sys = [
-      "You are VoxTalk.",
-      "Be concise, clear, and friendly.",
-      "If asked for code, provide runnable snippets.",
-      "If asked for steps, use short numbered bullets."
-    ].join(" ");
-
-    const resp = await fetch("https://api.openai.com/v1/responses", {
+    const r = await fetch("https://api.openai.com/v1/realtime/sessions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
-        input: [
-          { role: "system", content: sys },
-          { role: "user", content: prompt }
-        ]
-      })
+        model: "gpt-4o-realtime-preview",
+        voice: "alloy",
+        instructions:
+          "You are VoxTalk, a calm, intelligent, human-sounding voice partner. Speak clearly, always in English, and respond conversationally.",
+      }),
     });
 
-    if (!resp.ok) {
-      const text = await resp.text().catch(() => "");
-      return res.status(resp.status).json({ error: `OpenAI error: ${text || resp.statusText}` });
+    const data = await r.json();
+
+    if (!r.ok || !data?.client_secret) {
+      console.error("Realtime session failed:", data);
+      return res.status(500).json({ error: "session_failed", data });
     }
 
-    const data = await resp.json();
-    const reply = data.output_text || "I’m here.";
-    return res.json({ reply });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Server crashed processing /chat" });
+    res.json({
+      client_secret: data.client_secret,
+      model: "gpt-4o-realtime-preview",
+      voice: "alloy",
+    });
+  } catch (e) {
+    console.error("Session error:", e);
+    res.status(500).json({ error: "session_failed" });
   }
 });
 
-// Fallback to index.html
-app.get("/", (_req, res) => {
-  res.sendFile(path.join(ROOT, "public", "index.html"));
-});
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ VoxTalk™ Clone-11 running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log("✅ VoxTalk Voice Classic running on port " + PORT));
