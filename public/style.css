@@ -87,7 +87,17 @@ body{
   border-radius:999px;padding:7px 14px;box-shadow:0 0 10px rgba(78,168,255,0.35);
 }
 .send-btn:hover,.mic-btn:hover{filter:brightness(1.12);}
-.thread{display:flex;flex-direction:column;gap:8px;}
+
+/* Chat Messages */
+.thread{
+  display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;
+}
+.msg.user{
+  align-self:flex-end;background:#1a2b4a;padding:6px 10px;border-radius:10px;
+}
+.msg.vox{
+  align-self:flex-start;background:#12223e;padding:6px 10px;border-radius:10px;
+}
 
 /* Corner Buttons */
 .corner-btn{
