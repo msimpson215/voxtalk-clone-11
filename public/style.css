@@ -1,10 +1,10 @@
-/* FIX SPACING ISSUES */
+/* FIX LAYOUT & MODALS */
 .stage { 
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: 80px; /* push halo button down */
+  padding-top: 80px;
 }
 
 .quiet {
@@ -17,22 +17,16 @@
   padding: 8px 12px;
 }
 
-.quiet-form {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.modal-content img {
-  border-radius: 8px;
-  margin-right: 10px;
-}
-
-.cart-item {
-  display: flex;
-  align-items: center;
+.cart-table {
+  width: 100%;
   text-align: left;
-  gap: 10px;
+  border-collapse: collapse;
+  margin-bottom: 10px;
 }
-.cart-details p { margin: 3px 0; }
-.subtotal { margin-top: 10px; font-weight: bold; }
+.cart-table td {
+  padding: 4px 0;
+}
+.cart-table .total-row td {
+  border-top: 1px solid #20345e;
+  padding-top: 6px;
+}
