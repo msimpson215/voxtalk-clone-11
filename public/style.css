@@ -7,7 +7,6 @@
   --shadow:0 8px 30px rgba(0,0,0,0.35);
 }
 
-/* Reset */
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;width:100%}
 body{
@@ -19,15 +18,10 @@ body{
   overflow-x:hidden;
 }
 
-/* Header - bring above everything so nav is clickable */
+/* Header on top so nav stays clickable */
 .topbar{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:10px;
-  padding-top:16px;
-  position:relative;
-  z-index:1200; /* <- ensures header buttons sit on top */
+  display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:16px;
+  position:relative;z-index:1200;
 }
 .brand{
   font-size:2rem;letter-spacing:1.2px;color:var(--accent-2);
@@ -39,31 +33,31 @@ body{
   background:#132238;color:var(--ink);border:1px solid #1c2a48;
   border-radius:999px;padding:10px 0;font-weight:600;
   font-size:1rem;box-shadow:var(--shadow);cursor:pointer;
-  position:relative;
 }
 
-/* Stage / Voice - keep above chat but below header */
+/* Stage/Voice below header, above chat */
 .stage{
   flex:0 0 auto;
   display:flex;align-items:center;justify-content:center;
   height:45vh;
-  margin-top:-20px;
+  margin-top:-12px;
   position:relative;
-  z-index:600; /* above chat but below header */
-  pointer-events:none; /* prevent accidental overlay blocking header/nav */
+  z-index:700;
 }
 
-/* Allow the interactive button to receive events */
+/* Keep Stop directly under halo */
+.halo-stack{
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  gap:14px;
+}
+
+/* Halo button */
 .halo-btn{
-  pointer-events:auto; /* halo button itself remains clickable */
   position:relative;
-  width:200px;height:200px;
-  border-radius:50%;border:none;
+  width:200px;height:200px;border-radius:50%;border:none;cursor:pointer;
   background:radial-gradient(60% 60% at 50% 40%,#1d3b63,#0f1d33 60%,#0b1427 100%);
   box-shadow:inset 0 0 40px #0a1b35,0 10px 50px rgba(0,0,0,.6);
-  cursor:pointer;
 }
-.halo-btn[disabled]{opacity:.7;cursor:progress;}
 .halo-btn .halo-label{
   position:absolute;left:50%;top:50%;
   transform:translate(-50%,-50%);
@@ -79,83 +73,57 @@ body{
 .ring.r3{inset:-30px;opacity:.45;animation-duration:4s}
 @keyframes float{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
 
-/* Halo wrapper and Stop button placement - ensure Stop is above chat */
-.halo-wrapper{
-  position:relative;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  pointer-events:none; /* wrapper does not block */
-  z-index:610;
-}
-.halo-wrapper > .halo-btn { pointer-events:auto; } /* button active */
+/* Stop (sits under halo, above chat) */
 .stop-btn{
-  margin-top:14px;
-  pointer-events:auto;
   background:linear-gradient(180deg,#22385e,#1b2e4d);
-  color:#fff;
-  border:1px solid #355;
-  border-radius:999px;
-  padding:8px 18px;
-  cursor:pointer;
-  font-size:0.9rem;
+  color:#fff;border:1px solid #355;border-radius:999px;
+  padding:8px 18px;cursor:pointer;font-size:0.9rem;
   box-shadow:0 4px 20px rgba(0,0,0,0.4);
-  transition:all 0.12s ease;
-  z-index:620; /* above halo and above chat */
+  z-index:720;
 }
-.stop-btn:hover{transform:translateY(-1px);}
+.hidden{display:none;}
 
-/* Classic Chat area - place below stage, ensure lower z-index than stage/stop */
+/* Classic Chat — push down, lighten slightly */
 .quiet{
   max-width:600px;width:90%;
-  margin-top:8px;margin-bottom:75px;
+  margin-top:28px;   /* moved down a bit */
+  margin-bottom:80px;
   display:flex;flex-direction:column;gap:12px;
-  position:relative;
-  z-index:100; /* well below stage and header */
+  position:relative;z-index:100;
 }
 .quiet-form{
   display:flex;align-items:center;gap:8px;
-  background:linear-gradient(180deg,#13233e,#0e1a31); /* slightly brighter than before */
-  border:1px solid #1b2a4f;border-radius:14px;
-  padding:8px 12px;box-shadow:var(--shadow);
+  background:linear-gradient(180deg,#1a2a48,#12223e); /* brighter navy */
+  border:1px solid #223c6a;border-radius:14px;
+  padding:10px 12px;box-shadow:var(--shadow);
 }
 .quiet-input{
-  flex:1;
-  background:rgba(255,255,255,0.06);
-  border:none;outline:none;color:var(--ink);
-  font-size:1rem;padding:8px;border-radius:8px;
+  flex:1;background:rgba(255,255,255,0.08);border:none;outline:none;color:var(--ink);
+  font-size:1rem;padding:10px;border-radius:8px;
 }
-.quiet-input::placeholder{color:#cfe4ff;opacity:0.9;}
-.quiet-input:focus{
-  background:rgba(255,255,255,0.12);
-  outline:1px solid var(--accent);
-}
+.quiet-input::placeholder{color:#d6e7ff;opacity:0.95;}
+.quiet-input:focus{background:rgba(255,255,255,0.14);outline:1px solid var(--accent);}
 .send-btn{
   background:linear-gradient(180deg,#1a355a,#122441);
   border:1px solid #294a78;color:#dff0ff;font-weight:600;
-  border-radius:999px;padding:8px 16px;
+  border-radius:999px;padding:9px 16px;
   box-shadow:0 0 12px rgba(78,168,255,0.35);
 }
 
-/* Thread scroll region */
-.thread{
-  max-height:36vh;overflow:auto;padding:6px 2px;background:transparent;
-}
+/* Thread */
+.thread{max-height:36vh;overflow:auto;padding:6px 2px;}
 .thread div{padding:4px 0;line-height:1.4}
 
-/* Corner Buttons (Print / Contact) - restore positions and z-index */
+/* Corner buttons stay where they were */
 .corner-btn{
-  position:fixed;
-  bottom:10px;
-  background:#101c33;color:#e6ebff;border:1px solid #20345e;
+  position:fixed;bottom:10px;background:#101c33;color:#e6ebff;border:1px solid #20345e;
   border-radius:999px;padding:7px 12px;font-weight:500;font-size:0.85rem;
-  cursor:pointer;box-shadow:var(--shadow);
-  z-index:1200;text-decoration:none;line-height:1.2;
+  cursor:pointer;box-shadow:var(--shadow);z-index:1200;text-decoration:none;line-height:1.2;
 }
 .corner-btn.left{left:14px;}
 .corner-btn.right{right:14px;}
 
-/* Modals keep very high z-index */
+/* Modals */
 .modal{
   position:fixed;inset:0;background:rgba(0,0,0,0.7);
   display:flex;align-items:center;justify-content:center;
@@ -169,13 +137,12 @@ body{
   box-shadow:var(--shadow);text-align:center;
 }
 
-/* Small responsiveness tweaks */
+/* Responsive */
 @media(max-width:600px){
   .brand{font-size:1.8rem;}
   .nav-buttons .pill{flex:1;}
   .halo-btn{width:170px;height:170px;}
-  .stop-btn{margin-top:12px;}
-  .quiet{width:92%;max-width:420px;margin-bottom:80px;}
+  .quiet{width:92%;max-width:420px;margin-bottom:88px;}
 }
 @media(min-width:1200px){
   .brand{font-size:2.3rem;}
