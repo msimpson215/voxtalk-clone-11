@@ -10,7 +10,7 @@ app.use(express.json({ limit: "2mb" }));
 // 🟢 Health check
 app.get("/health", (_req, res) => res.json({ ok: true, ts: Date.now() }));
 
-// 🟢 Classic text chat (fixed)
+// 🟢 Text chat endpoint (original)
 app.post("/chat", async (req, res) => {
   try {
     const { prompt } = req.body || {};
@@ -25,19 +25,14 @@ app.post("/chat", async (req, res) => {
       body: JSON.stringify({
         model: "gpt-4.1-mini",
         input: [
-          { role: "system", content: "You are VoxTalk — a calm, clear AI partner for websites and stores." },
+          { role: "system", content: "You are VoxTalk. Be short, kind, clear, and conversational." },
           { role: "user", content: prompt }
         ]
       })
     });
 
     const data = await r.json();
-    const text =
-      data.output_text ||
-      data.output?.[0]?.content?.[0]?.text ||
-      data.output?.[0]?.content ||
-      "(no response from AI)";
-
+    const text = data.output_text || "(no response)";
     res.json({ reply: text });
   } catch (err) {
     console.error("Chat error:", err);
@@ -45,7 +40,7 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-// 🟣 Voice session (unchanged)
+// 🟣 Voice session endpoint
 app.post("/session", async (_req, res) => {
   try {
     const r = await fetch("https://api.openai.com/v1/realtime/sessions", {
@@ -58,9 +53,10 @@ app.post("/session", async (_req, res) => {
         model: "gpt-4o-realtime-preview",
         voice: "alloy",
         instructions:
-          "You are VoxTalk, a calm, friendly voice assistant. Speak clearly and naturally."
+          "You are VoxTalk, a calm, friendly assistant. Always reply in clear English."
       })
     });
+
     const data = await r.json();
     res.json({ client_secret: data.client_secret });
   } catch (e) {
@@ -70,4 +66,4 @@ app.post("/session", async (_req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("✅ VoxTalk running on port " + PORT));
+app.listen(PORT, () => console.log("✅ VoxTalk Clone-11 running on port " + PORT));
