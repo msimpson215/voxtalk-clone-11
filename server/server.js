@@ -1,16 +1,20 @@
 import express from "express";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
+import Stripe from "stripe";
 dotenv.config();
 
 const app = express();
 app.use(express.static("public"));
 app.use(express.json({ limit: "2mb" }));
 
+// Stripe setup
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
 // 🟢 Health check
 app.get("/health", (_req, res) => res.json({ ok: true, ts: Date.now() }));
 
-// 🟢 Text chat endpoint (original, with ONLY parser fallback added)
+// 🟢 Text chat endpoint
 app.post("/chat", async (req, res) => {
   try {
     const { prompt } = req.body || {};
@@ -32,17 +36,12 @@ app.post("/chat", async (req, res) => {
     });
 
     const data = await r.json();
-
-    // ------- SURGICAL CHANGE: robust fallback parsing only ----------
-    // Try existing keys in order, preserve original behavior if present
     const text =
-      data.output_text || // old field
-      data.output?.[0]?.content?.[0]?.text || // new-ish nested shape
-      data.output?.[0]?.content || // some responses put plain text here
-      data.choices?.[0]?.message?.content || // chat-completion style fallback
+      data.output_text ||
+      data.output?.[0]?.content?.[0]?.text ||
+      data.output?.[0]?.content ||
+      data.choices?.[0]?.message?.content ||
       "(no response)";
-    // ----------------------------------------------------------------
-
     res.json({ reply: text });
   } catch (err) {
     console.error("Chat error:", err);
@@ -72,6 +71,39 @@ app.post("/session", async (_req, res) => {
   } catch (e) {
     console.error("Session error:", e);
     res.status(500).json({ error: "session_failed" });
+  }
+});
+
+// 🧾 Stripe Checkout route
+app.post("/create-checkout-session", async (_req, res) => {
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: { name: "Windshield De-Icer – 1 gal" },
+            unit_amount: 1299
+          },
+          quantity: 1
+        },
+        {
+          price_data: {
+            currency: "usd",
+            product_data: { name: "Organic Apples (2 lb)" },
+            unit_amount: 349
+          },
+          quantity: 1
+        }
+      ],
+      success_url: "https://example.com/success",
+      cancel_url: "https://example.com/cancel"
+    });
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error("Stripe error:", err.message);
+    res.status(500).json({ error: "Stripe checkout failed" });
   }
 });
 
