@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>VoxTalk™ Clone-11 Checkout Demo</title>
+  <title>VoxTalk™ Clone-11 (Stripe)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://js.stripe.com/v3/"></script>
@@ -30,10 +30,9 @@
 
   <section class="quiet">
     <form id="quietForm" class="quiet-form" autocomplete="off">
-      <input id="quietInput" class="quiet-input" type="text" placeholder="Classic Chat — type your question here..." />
-      <div class="quiet-controls">
-        <button id="sendBtn" class="pill send-btn" type="submit">Send</button>
-      </div>
+      <input id="quietInput" class="quiet-input" type="text"
+             placeholder="Classic Chat — type your question here..." />
+      <button id="sendBtn" class="pill send-btn" type="submit">Send</button>
     </form>
     <div id="thread" class="thread"></div>
   </section>
@@ -41,145 +40,105 @@
   <button class="corner-btn left" onclick="window.print()">Print Conversation</button>
   <a class="corner-btn right" href="tel:18005551234">Contact Human</a>
 
-  <!-- CART -->
+  <!-- Modals -->
   <div id="cartModal" class="modal hidden">
     <div class="modal-content">
       <h2>Your Cart</h2>
-      <p><strong>1 × Pre-De-Icer Demo Bottle</strong></p>
-      <p>Price: <strong>$9.99</strong></p>
-      <button class="pill" onclick="startCheckout({itemName:'Pre-De-Icer Demo Bottle',amount_cents:999})">Checkout Now</button>
+      <p>1 × VoxTalk Subscription (Demo) — $50</p>
       <button class="pill" onclick="closeModal('cartModal')">Close</button>
     </div>
   </div>
 
-  <!-- INFO -->
   <div id="infoModal" class="modal hidden">
     <div class="modal-content">
       <h2>About VoxTalk</h2>
-      <p>VoxTalk™ is a plug-in voice + chat assistant you can add to any website or app. Talk or type — it helps customers find products, check out, or get help faster.</p>
-      <h3>How to use</h3>
-      <ol style="text-align:left;max-width:420px;margin:0 auto">
-        <li>Click the halo to start voice (allow microphone if prompted).</li>
-        <li>Use the chat box to type a question.</li>
-        <li>Open Checkout → fill card details → submit (test mode uses card 4242 4242 4242 4242).</li>
-      </ol>
-      <p class="note">Demo only: to process real payments, configure Stripe keys in your server .env.</p>
+      <p>Talk or type — your calm AI partner for any website or store.</p>
+      <p class="note">Click outside this box to return.</p>
       <button class="pill" onclick="closeModal('infoModal')">Close</button>
     </div>
   </div>
 
-  <!-- CHECKOUT -->
   <div id="checkoutModal" class="modal hidden">
     <div class="modal-content">
-      <h2>Checkout (Demo)</h2>
-      <p>Buy a demo bottle to try a full flow.</p>
-      <form id="checkoutForm" onsubmit="handleCheckout(event)">
-        <input id="name" type="text" placeholder="Full name" required />
-        <input id="email" type="email" placeholder="Email (receipt goes here)" required />
-        <div style="margin-top:8px">
-          <label style="font-size:0.9rem;display:block;margin-bottom:6px">Card details (test only)</label>
-          <input id="fakeCard" type="text" placeholder="4242 4242 4242 4242" value="4242 4242 4242 4242" required />
-        </div>
-        <button class="pill" type="submit" style="margin-top:12px">Pay $9.99</button>
-      </form>
-      <button class="pill" style="margin-top:10px" onclick="closeModal('checkoutModal')">Cancel</button>
+      <h2>Checkout</h2>
+      <p>Click below to begin secure payment (Stripe Test Mode).</p>
+      <button id="checkoutBtn" class="pill">Proceed to Checkout</button>
+      <button class="pill ghost" onclick="closeModal('checkoutModal')">Close</button>
     </div>
   </div>
 
   <script>
-    // --- Modal helpers
-    function openModal(id){ document.getElementById(id)?.classList.remove("hidden"); }
-    function closeModal(id){ document.getElementById(id)?.classList.add("hidden"); }
-    document.querySelectorAll(".modal").forEach(m => m.addEventListener("click", e => { if(e.target===m) m.classList.add("hidden"); }));
+  // Modal logic
+  function openModal(id){ document.getElementById(id).classList.remove("hidden"); }
+  function closeModal(id){ document.getElementById(id).classList.add("hidden"); }
+  document.querySelectorAll(".modal").forEach(m => 
+    m.addEventListener("click", e => { if(e.target===m) m.classList.add("hidden"); })
+  );
 
-    // --- Voice wiring (same as baseline)
-    const haloBtn = document.getElementById("haloBtn");
-    const stopBtn = document.getElementById("stopBtn");
-    const remote = document.getElementById("remote");
-    let pc, localStream;
+  // Voice
+  const haloBtn=document.getElementById("haloBtn");
+  const stopBtn=document.getElementById("stopBtn");
+  const remote=document.getElementById("remote");
+  let pc,localStream;
+  haloBtn.onclick=async()=>{
+    haloBtn.disabled=true;
+    haloBtn.querySelector(".halo-label").textContent="Connecting...";
+    const resp=await fetch("/session",{method:"POST"});
+    const data=await resp.json();
+    if(!data?.client_secret?.value)return;
+    pc=new RTCPeerConnection();
+    pc.ontrack=e=>remote.srcObject=e.streams[0];
+    localStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+    const offer=await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    const r2=await fetch("https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview",{
+      method:"POST",
+      headers:{
+        Authorization:`Bearer ${data.client_secret.value}`,
+        "Content-Type":"application/sdp"
+      },
+      body:offer.sdp
+    });
+    const answer={type:"answer",sdp:await r2.text()};
+    await pc.setRemoteDescription(answer);
+    haloBtn.querySelector(".halo-label").textContent="Live";
+    stopBtn.classList.remove("hidden");
+  };
+  stopBtn.onclick=()=>{
+    if(localStream) localStream.getTracks().forEach(t=>t.stop());
+    if(pc) pc.close();
+    haloBtn.disabled=false;
+    haloBtn.querySelector(".halo-label").textContent="Click to Talk";
+    stopBtn.classList.add("hidden");
+  };
 
-    haloBtn.onclick = async () => {
-      haloBtn.disabled = true;
-      haloBtn.querySelector(".halo-label").textContent = "Connecting...";
-      try {
-        const resp = await fetch("/session", { method: "POST" });
-        const data = await resp.json();
-        if (!data?.client_secret?.value) throw new Error("No client secret");
-        pc = new RTCPeerConnection();
-        pc.ontrack = (e) => remote.srcObject = e.streams[0];
-        localStream = await navigator.mediaDevices.getUserMedia({ audio:true });
-        localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        const r2 = await fetch("https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview", {
-          method:"POST",
-          headers:{ Authorization:`Bearer ${data.client_secret.value}`, "Content-Type":"application/sdp" },
-          body:offer.sdp
-        });
-        const answer = { type:"answer", sdp: await r2.text() };
-        await pc.setRemoteDescription(answer);
-        haloBtn.querySelector(".halo-label").textContent = "Live";
-        stopBtn.classList.remove("hidden");
-      } catch (err) {
-        console.error("voice error", err);
-        haloBtn.querySelector(".halo-label").textContent = "Click to Talk";
-        haloBtn.disabled = false;
-      }
-    };
+  // Classic Chat
+  const form=document.getElementById("quietForm");
+  const input=document.getElementById("quietInput");
+  const thread=document.getElementById("thread");
+  form.onsubmit=async(e)=>{
+    e.preventDefault();
+    const text=input.value.trim();
+    if(!text)return;
+    const userDiv=document.createElement("div");
+    userDiv.textContent="🧍 "+text;
+    thread.appendChild(userDiv);
+    input.value="";
+    const resp=await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:text})});
+    const data=await resp.json();
+    const botDiv=document.createElement("div");
+    botDiv.textContent="🤖 "+(data.reply||"..."); thread.appendChild(botDiv);
+    thread.scrollTop=thread.scrollHeight;
+  };
 
-    stopBtn.onclick = () => {
-      if (localStream) localStream.getTracks().forEach(t=>t.stop());
-      if (pc) pc.close();
-      haloBtn.disabled = false;
-      haloBtn.querySelector(".halo-label").textContent = "Click to Talk";
-      stopBtn.classList.add("hidden");
-    };
-
-    // --- Classic chat
-    const form = document.getElementById("quietForm");
-    const input = document.getElementById("quietInput");
-    const thread = document.getElementById("thread");
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-      const text = input.value.trim();
-      if (!text) return;
-      const userDiv = document.createElement("div"); userDiv.textContent = "🧍 " + text; thread.appendChild(userDiv);
-      input.value = "";
-      const resp = await fetch("/chat", { method:"POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ prompt: text }) });
-      const data = await resp.json();
-      const botDiv = document.createElement("div"); botDiv.textContent = "🤖 " + (data.reply || "...");
-      thread.appendChild(botDiv);
-      thread.scrollTop = thread.scrollHeight;
-    };
-
-    // --- Checkout flow (calls server to create Stripe Checkout session)
-    async function startCheckout(item = { itemName: "Pre-De-Icer Demo Bottle", amount_cents: 999 }) {
-      try {
-        // POST to server to create session
-        const resp = await fetch("/create-checkout-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(item)
-        });
-        const data = await resp.json();
-        if (!data.sessionId) return alert("Stripe not configured on server. Check .env.");
-
-        // Use returned publishable key or fallback (server included publishableKey)
-        const stripe = Stripe(data.publishableKey || "");
-        await stripe.redirectToCheckout({ sessionId: data.sessionId });
-      } catch (err) {
-        console.error("checkout start error", err);
-        alert("Could not start checkout. See console for details.");
-      }
-    }
-
-    // Wired to cart button in cart modal and checkout form submit
-    async function handleCheckout(e) {
-      e.preventDefault();
-      const name = document.getElementById("name").value || "Demo buyer";
-      const email = document.getElementById("email").value || "";
-      await startCheckout({ itemName: `Pre-De-Icer Demo - ${name}`, amount_cents: 999 });
-    }
+  // Stripe Checkout
+  const stripe = Stripe("<?= process.env.STRIPE_PUBLISHABLE_KEY ?>");
+  document.getElementById("checkoutBtn").addEventListener("click", async () => {
+    const resp = await fetch("/create-checkout-session", { method: "POST" });
+    const data = await resp.json();
+    window.location.href = data.url;
+  });
   </script>
 </body>
 </html>
