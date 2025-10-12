@@ -18,14 +18,18 @@
   </header>
 
   <main class="stage">
-    <button id="haloBtn" class="halo-btn">
-      <div class="halo ring r1"></div>
-      <div class="halo ring r2"></div>
-      <div class="halo ring r3"></div>
-      <span class="halo-label">Click&nbsp;to&nbsp;Talk</span>
-    </button>
+    <!-- NEW: stack to keep Stop directly under halo, centered -->
+    <div class="halo-stack">
+      <button id="haloBtn" class="halo-btn">
+        <div class="halo ring r1"></div>
+        <div class="halo ring r2"></div>
+        <div class="halo ring r3"></div>
+        <span class="halo-label">Click&nbsp;to&nbsp;Talk</span>
+      </button>
+      <button id="stopBtn" class="stop-btn hidden">Stop Voice</button>
+    </div>
+
     <audio id="remote" autoplay playsinline></audio>
-    <button id="stopBtn" class="stop-btn hidden">Stop Voice</button>
   </main>
 
   <!-- Classic Chat -->
@@ -50,6 +54,7 @@
         <tr><td>Windshield De-Icer – 1 gal</td><td>$12.99</td></tr>
         <tr class="total-row"><td><strong>Total</strong></td><td><strong>$16.48</strong></td></tr>
       </table>
+      <p>Click <strong>Checkout</strong> to proceed or <strong>Close</strong> to continue shopping.</p>
       <button class="pill" onclick="closeModal('cartModal')">Close</button>
     </div>
   </div>
@@ -77,77 +82,76 @@
   </div>
 
   <script>
-    // Modal logic
-    function openModal(id){ document.getElementById(id).classList.remove("hidden"); }
-    function closeModal(id){ document.getElementById(id).classList.add("hidden"); }
-    document.querySelectorAll(".modal").forEach(m =>
-      m.addEventListener("click", e => { if(e.target===m) m.classList.add("hidden"); })
-    );
+  // Modal logic
+  function openModal(id){ document.getElementById(id).classList.remove("hidden"); }
+  function closeModal(id){ document.getElementById(id).classList.add("hidden"); }
+  document.querySelectorAll(".modal").forEach(m =>
+    m.addEventListener("click", e => { if(e.target===m) m.classList.add("hidden"); })
+  );
 
-    // Voice
-    const haloBtn=document.getElementById("haloBtn");
-    const stopBtn=document.getElementById("stopBtn");
-    const remote=document.getElementById("remote");
-    let pc,localStream;
-    haloBtn.onclick=async()=>{
-      haloBtn.disabled=true;
-      haloBtn.querySelector(".halo-label").textContent="Connecting...";
-      const resp=await fetch("/session",{method:"POST"});
-      const data=await resp.json();
-      if(!data?.client_secret?.value)return;
-      pc=new RTCPeerConnection();
-      pc.ontrack=e=>remote.srcObject=e.streams[0];
-      localStream=await navigator.mediaDevices.getUserMedia({audio:true});
-      localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
-      const offer=await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      const r2=await fetch("https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview",{
-        method:"POST",
-        headers:{
-          Authorization:`Bearer ${data.client_secret.value}`,
-          "Content-Type":"application/sdp"
-        },
-        body:offer.sdp
-      });
-      const answer={type:"answer",sdp:await r2.text()};
-      await pc.setRemoteDescription(answer);
-      haloBtn.querySelector(".halo-label").textContent="Live";
-      stopBtn.classList.remove("hidden");
-    };
-    stopBtn.onclick=()=>{
-      if(localStream) localStream.getTracks().forEach(t=>t.stop());
-      if(pc) pc.close();
-      haloBtn.disabled=false;
-      haloBtn.querySelector(".halo-label").textContent="Click to Talk";
-      stopBtn.classList.add("hidden");
-    };
-
-    // Classic Chat
-    const form=document.getElementById("quietForm");
-    const input=document.getElementById("quietInput");
-    const thread=document.getElementById("thread");
-    form.onsubmit=async(e)=>{
-      e.preventDefault();
-      const text=input.value.trim();
-      if(!text)return;
-      const userDiv=document.createElement("div");
-      userDiv.textContent="🧍 "+text;
-      thread.appendChild(userDiv);
-      input.value="";
-      const resp=await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:text})});
-      const data=await resp.json();
-      const botDiv=document.createElement("div");
-      botDiv.textContent="🤖 "+(data.reply||"..."); thread.appendChild(botDiv);
-      thread.scrollTop=thread.scrollHeight;
-    };
-
-    // Stripe Checkout
-    const stripe = Stripe("pk_test_51SHCGpE44DdqctQ41sbQyxJ2Sjx4yh6SXV01ZSB34foIWPvl8OKCkfkYw9017PhK2tp0euZTaLjxvI1FOQ4uA8hm00ELjyCDK5");
-    document.getElementById("checkoutBtn").addEventListener("click", async () => {
-      const resp = await fetch("/create-checkout-session", { method: "POST" });
-      const data = await resp.json();
-      window.location.href = data.url;
+  // Voice
+  const haloBtn=document.getElementById("haloBtn");
+  const stopBtn=document.getElementById("stopBtn");
+  const remote=document.getElementById("remote");
+  let pc,localStream;
+  haloBtn.onclick=async()=>{
+    haloBtn.disabled=true;
+    haloBtn.querySelector(".halo-label").textContent="Connecting...";
+    const resp=await fetch("/session",{method:"POST"});
+    const data=await resp.json();
+    if(!data?.client_secret?.value)return;
+    pc=new RTCPeerConnection();
+    pc.ontrack=e=>remote.srcObject=e.streams[0];
+    localStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+    const offer=await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    const r2=await fetch("https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview",{
+      method:"POST",
+      headers:{
+        Authorization:`Bearer ${data.client_secret.value}`,
+        "Content-Type":"application/sdp"
+      },
+      body:offer.sdp
     });
+    const answer={type:"answer",sdp:await r2.text()};
+    await pc.setRemoteDescription(answer);
+    haloBtn.querySelector(".halo-label").textContent="Live";
+    stopBtn.classList.remove("hidden");
+  };
+  stopBtn.onclick=()=>{
+    if(localStream) localStream.getTracks().forEach(t=>t.stop());
+    if(pc) pc.close();
+    haloBtn.disabled=false;
+    haloBtn.querySelector(".halo-label").textContent="Click to Talk";
+    stopBtn.classList.add("hidden");
+  };
+
+  // Classic Chat
+  const form=document.getElementById("quietForm");
+  const input=document.getElementById("quietInput");
+  const thread=document.getElementById("thread");
+  form.onsubmit=async(e)=>{
+    e.preventDefault();
+    const text=input.value.trim();
+    if(!text)return;
+    const userDiv=document.createElement("div");
+    userDiv.textContent="🧍 "+text;
+    thread.appendChild(userDiv);
+    input.value="";
+    const resp=await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:text})});
+    const data=await resp.json();
+    const botDiv=document.createElement("div");
+    botDiv.textContent="🤖 "+(data.reply||"..."); thread.appendChild(botDiv);
+    thread.scrollTop=thread.scrollHeight;
+  };
+
+  // Stripe Checkout (leave as-is; API wiring handled elsewhere)
+  document.getElementById("checkoutBtn").addEventListener("click", async () => {
+    const resp = await fetch("/create-checkout-session", { method: "POST" });
+    const data = await resp.json();
+    if (data?.url) window.location.href = data.url;
+  });
   </script>
 </body>
 </html>
