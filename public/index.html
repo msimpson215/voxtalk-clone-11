@@ -11,9 +11,9 @@
   <header class="topbar">
     <h1 class="brand">VoxTalk<sup>™</sup></h1>
     <nav class="nav-buttons">
-      <button class="pill ghost" onclick="openModal('cartModal')">Cart</button>
-      <button class="pill ghost" onclick="openModal('infoModal')">Info</button>
-      <button class="pill ghost" onclick="openModal('checkoutModal')">Checkout</button>
+      <button class="pill ghost" onclick="openModal('cartModal')">🛒 Cart</button>
+      <button class="pill ghost" onclick="openModal('infoModal')">ℹ️ Info</button>
+      <button class="pill ghost" onclick="openModal('checkoutModal')">💳 Checkout</button>
     </nav>
   </header>
 
@@ -28,42 +28,56 @@
     <button id="stopBtn" class="stop-btn hidden">Stop Voice</button>
   </main>
 
+  <!-- Classic Chat -->
   <section class="quiet">
     <form id="quietForm" class="quiet-form" autocomplete="off">
       <input id="quietInput" class="quiet-input" type="text"
-             placeholder="Classic Chat — type your question here..." />
+             placeholder="Type here to chat with VoxTalk..." />
       <button id="sendBtn" class="pill send-btn" type="submit">Send</button>
     </form>
     <div id="thread" class="thread"></div>
   </section>
 
-  <button class="corner-btn left" onclick="window.print()">Print Conversation</button>
-  <a class="corner-btn right" href="tel:18005551234">Contact Human</a>
+  <button class="corner-btn left" onclick="window.print()">🖨 Print Conversation</button>
+  <a class="corner-btn right" href="tel:18005551234">📞 Contact Human</a>
 
-  <!-- Modals -->
+  <!-- CART MODAL -->
   <div id="cartModal" class="modal hidden">
     <div class="modal-content">
       <h2>Your Cart</h2>
-      <p>1 × VoxTalk Subscription (Demo) — $50</p>
+      <div class="cart-item">
+        <img src="https://dummyimage.com/100x100/4ea8ff/ffffff&text=VoxTalk" alt="Product">
+        <div class="cart-details">
+          <p class="item-name">VoxTalk Subscription (Demo)</p>
+          <p class="item-desc">AI voice + chat assistant for your store or site.</p>
+          <p class="item-price">$50.00</p>
+        </div>
+      </div>
+      <hr>
+      <p class="subtotal">Subtotal: <strong>$50.00</strong></p>
       <button class="pill" onclick="closeModal('cartModal')">Close</button>
     </div>
   </div>
 
+  <!-- INFO MODAL -->
   <div id="infoModal" class="modal hidden">
     <div class="modal-content">
       <h2>About VoxTalk</h2>
-      <p>Talk or type — your calm AI partner for any website or store.</p>
-      <p class="note">Click outside this box to return.</p>
+      <p><strong>Talk or type — your calm AI partner for any website.</strong></p>
+      <p>VoxTalk brings real-time voice conversation and instant answers to any business website, store, or customer portal. It remembers context, provides help, and connects to checkout.</p>
+      <p>Use the <em>Click to Talk</em> button to start voice chat, or type below for text conversation.</p>
+      <p class="note">Powered by OpenAI and Stripe (Test Mode). Click outside this box to return.</p>
       <button class="pill" onclick="closeModal('infoModal')">Close</button>
     </div>
   </div>
 
+  <!-- CHECKOUT MODAL -->
   <div id="checkoutModal" class="modal hidden">
     <div class="modal-content">
-      <h2>Checkout</h2>
-      <p>Click below to begin secure payment (Stripe Test Mode).</p>
-      <button id="checkoutBtn" class="pill">Proceed to Checkout</button>
-      <button class="pill ghost" onclick="closeModal('checkoutModal')">Close</button>
+      <h2>Secure Checkout</h2>
+      <p>You’ll be redirected to a secure Stripe checkout page (Test Mode).</p>
+      <button id="checkoutBtn" class="pill">Proceed to Payment</button>
+      <button class="pill ghost" onclick="closeModal('checkoutModal')">Cancel</button>
     </div>
   </div>
 
@@ -71,7 +85,7 @@
   // Modal logic
   function openModal(id){ document.getElementById(id).classList.remove("hidden"); }
   function closeModal(id){ document.getElementById(id).classList.add("hidden"); }
-  document.querySelectorAll(".modal").forEach(m => 
+  document.querySelectorAll(".modal").forEach(m =>
     m.addEventListener("click", e => { if(e.target===m) m.classList.add("hidden"); })
   );
 
@@ -133,7 +147,7 @@
   };
 
   // Stripe Checkout
-  const stripe = Stripe("<?= process.env.STRIPE_PUBLISHABLE_KEY ?>");
+  const stripe = Stripe("pk_test_51SHCGpE44DdqctQ41sbQyxJ2Sjx4yh6SXV01ZSB34foIWPvl8OKCkfkYw9017PhK2tp0euZTaLjxvI1FOQ4uA8hm00ELjyCDK5");
   document.getElementById("checkoutBtn").addEventListener("click", async () => {
     const resp = await fetch("/create-checkout-session", { method: "POST" });
     const data = await resp.json();
