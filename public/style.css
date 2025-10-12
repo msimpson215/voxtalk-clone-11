@@ -25,7 +25,6 @@ body{
   text-shadow:0 0 12px color-mix(in oklab,var(--accent-2) 60%,transparent);
 }
 .brand sup{font-size:0.6em;color:var(--accent-2);margin-left:2px;vertical-align:top;}
-.byline{font-size:0.9rem;color:#b4cfff;margin-left:6px;}
 .nav-buttons{display:flex;gap:12px;justify-content:center;width:90%;max-width:420px;}
 .nav-buttons .pill{
   flex:0 0 120px;text-align:center;
@@ -34,14 +33,13 @@ body{
   font-size:1rem;box-shadow:var(--shadow);cursor:pointer;
 }
 .nav-buttons .pill:hover{filter:brightness(1.1)}
-.upload-zone{margin-top:8px;}
 
 /* Halo / Voice */
 .stage{
   flex:0 0 auto;
   display:flex;align-items:center;justify-content:center;
   height:45vh;
-  margin-top:-20px; /* lifts Click-to-Talk */
+  margin-top:-20px;
   position:relative;
 }
 .halo-btn{
@@ -108,7 +106,7 @@ body{
   border-radius:999px;padding:8px 16px;
   box-shadow:0 0 12px rgba(78,168,255,0.35);
 }
-.send-btn:hover{filter:brightness(1.15);}
+.send-btn:hover{filter:brightness(1.15)}
 
 /* Corner Buttons */
 .corner-btn{
@@ -130,33 +128,4 @@ body{
 }
 .modal.hidden{display:none;}
 .modal-content{
-  background:#0f172a;color:var(--ink);
-  border:1px solid #244173;border-radius:16px;
-  padding:24px;max-width:500px;width:90%;
-  box-shadow:var(--shadow);text-align:center;
-}
-.modal-content h2{color:var(--accent-2);margin-bottom:10px;}
-.cart-table{width:100%;margin:10px 0;border-collapse:collapse;}
-.cart-table td{padding:6px 0;border-bottom:1px solid #20345e;}
-.checkout-form{display:flex;flex-direction:column;gap:8px;text-align:left;margin-top:10px;}
-.checkout-form label{font-size:0.9rem;color:#a6c8ff;}
-.checkout-form input{
-  padding:8px;border-radius:6px;border:1px solid #244173;
-  background:#132238;color:var(--ink);
-}
-.note{font-size:0.85rem;color:#b4cfff;margin-top:10px;}
-
-/* Responsive */
-@media(max-width:600px){
-  .brand{font-size:1.8rem;}
-  .nav-buttons .pill{flex:1;}
-  .halo-btn{width:170px;height:170px;}
-  .stop-btn{bottom:-60px;}
-  .quiet{width:92%;max-width:420px;margin-bottom:80px;}
-  .corner-btn{font-size:0.9rem;padding:8px 14px;}
-}
-@media(min-width:1200px){
-  .brand{font-size:2.3rem;}
-  .halo-btn{width:220px;height:220px;}
-  .quiet{max-width:700px;}
-}
+  background:#0f172a;color:var
