@@ -8,6 +8,9 @@ const app = express();
 app.use(express.static("public"));
 app.use(express.json({ limit: "2mb" }));
 
+// Stripe setup
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
 // 🟢 Health check
 app.get("/health", (_req, res) => res.json({ ok: true, ts: Date.now() }));
 
@@ -72,8 +75,6 @@ app.post("/session", async (_req, res) => {
 });
 
 // 🧾 Stripe Checkout route
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 app.post("/create-checkout-session", async (_req, res) => {
   try {
     const session = await stripe.checkout.sessions.create({
