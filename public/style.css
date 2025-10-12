@@ -16,11 +16,12 @@ body {
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
+  line-height: 1.3;
 }
 
 /* ───── Header ───── */
 .topbar {
-  margin-top: 16px;
+  margin-top: 10px;
   text-align: center;
 }
 .brand {
@@ -32,7 +33,7 @@ body {
   display: flex;
   gap: 12px;
   justify-content: center;
-  margin-top: 10px;
+  margin-top: 6px;
 }
 .pill {
   border-radius: 999px;
@@ -58,12 +59,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: 80px;
+  padding-top: 40px; /* tighter than before */
 }
 .halo-btn {
   position: relative;
-  width: 200px;
-  height: 200px;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
   border: none;
   background: radial-gradient(60% 60% at 50% 40%, #1d3b63, #0f1d33 70%);
@@ -109,7 +110,7 @@ body {
   width: 100%;
   background: #0d1428;
   border-top: 1px solid #1b2a4f;
-  padding: 8px 12px;
+  padding: 4px 10px; /* tightened */
 }
 .quiet-form {
   display: flex;
@@ -133,10 +134,10 @@ body {
 }
 
 .thread {
-  margin-top: 10px;
+  margin-top: 8px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   font-size: 0.95rem;
   max-height: 200px;
   overflow-y: auto;
@@ -158,6 +159,7 @@ body {
   padding: 7px 12px;
   font-size: 0.85rem;
   text-decoration: none;
+  box-shadow: 0 0 6px rgba(0,0,0,0.4);
 }
 .corner-btn.left { left: 14px; }
 .corner-btn.right { right: 14px; }
@@ -179,14 +181,21 @@ body {
   color: var(--ink);
   border: 1px solid #244173;
   border-radius: 16px;
-  padding: 24px;
+  padding: 18px; /* tighter */
   max-width: 500px;
   width: 90%;
   text-align: center;
   box-shadow: var(--shadow);
 }
-.modal-content h2 { color: var(--accent2); margin-top: 0; }
-.note { font-size: 0.85rem; color: #b4cfff; margin-top: 10px; }
+.modal-content h2 {
+  color: var(--accent2);
+  margin-top: 0;
+}
+.note {
+  font-size: 0.85rem;
+  color: #b4cfff;
+  margin-top: 10px;
+}
 
 /* ───── Cart / Info Tables ───── */
 .cart-table {
@@ -196,9 +205,9 @@ body {
   margin-bottom: 10px;
 }
 .cart-table td {
-  padding: 4px 0;
+  padding: 2px 0; /* compacted */
 }
 .cart-table .total-row td {
   border-top: 1px solid #20345e;
-  padding-top: 6px;
+  padding-top: 5px;
 }
