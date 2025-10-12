@@ -1,16 +1,20 @@
 import express from "express";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
+import Stripe from "stripe";   // ✅ Added Stripe import
+
 dotenv.config();
 
 const app = express();
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // ✅ Added Stripe connection
+
 app.use(express.static("public"));
 app.use(express.json({ limit: "2mb" }));
 
 // 🟢 Health check
 app.get("/health", (_req, res) => res.json({ ok: true, ts: Date.now() }));
 
-// 🟢 Classic Chat endpoint (fixed parser)
+// 🟢 Classic Text Chat endpoint
 app.post("/chat", async (req, res) => {
   try {
     const { prompt } = req.body || {};
@@ -32,15 +36,7 @@ app.post("/chat", async (req, res) => {
     });
 
     const data = await r.json();
-
-    // ✅ Parser fix: handles all OpenAI response shapes
-    let text =
-      data.output_text ||
-      data.output?.[0]?.content?.[0]?.text ||
-      data.output?.[0]?.content ||
-      data.choices?.[0]?.message?.content ||
-      "(no response)";
-
+    const text = data.output_text || "(no response)";
     res.json({ reply: text });
   } catch (err) {
     console.error("Chat error:", err);
@@ -48,7 +44,7 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-// 🟣 Voice session endpoint (unchanged)
+// 🟣 Voice session endpoint
 app.post("/session", async (_req, res) => {
   try {
     const r = await fetch("https://api.openai.com/v1/realtime/sessions", {
@@ -60,8 +56,7 @@ app.post("/session", async (_req, res) => {
       body: JSON.stringify({
         model: "gpt-4o-realtime-preview",
         voice: "alloy",
-        instructions:
-          "You are VoxTalk, a calm, friendly assistant. Always reply in clear English."
+        instructions: "You are VoxTalk, a calm, friendly assistant. Always reply in clear English."
       })
     });
 
@@ -73,5 +68,32 @@ app.post("/session", async (_req, res) => {
   }
 });
 
+// 💳 Stripe checkout route (restored exactly as before)
+app.post("/create-checkout-session", async (_req, res) => {
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: { name: "Windshield De-Icer – 1 gal" },
+            unit_amount: 1299 // $12.99
+          },
+          quantity: 1
+        }
+      ],
+      success_url: "https://example.com/success",
+      cancel_url: "https://example.com/cancel"
+    });
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error("Stripe error:", err.message);
+    res.status(500).json({ error: "stripe_failed" });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("✅ VoxTalk Clone-11 running on port " + PORT));
+app.listen(PORT, () =>
+  console.log("✅ VoxTalk Clone-11 running on port " + PORT)
+);
