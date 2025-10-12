@@ -18,15 +18,14 @@ body{
   overflow-x:hidden;
 }
 
-/* Header on top so nav stays clickable */
-.topbar{
-  display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:16px;
-  position:relative;z-index:1200;
-}
+/* Header */
+.topbar{display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:16px;}
 .brand{
   font-size:2rem;letter-spacing:1.2px;color:var(--accent-2);
   text-shadow:0 0 12px color-mix(in oklab,var(--accent-2) 60%,transparent);
 }
+.brand sup{font-size:0.6em;color:var(--accent-2);margin-left:2px;vertical-align:top;}
+.byline{font-size:0.9rem;color:#b4cfff;margin-left:6px;}
 .nav-buttons{display:flex;gap:12px;justify-content:center;width:90%;max-width:420px;}
 .nav-buttons .pill{
   flex:0 0 120px;text-align:center;
@@ -34,29 +33,24 @@ body{
   border-radius:999px;padding:10px 0;font-weight:600;
   font-size:1rem;box-shadow:var(--shadow);cursor:pointer;
 }
+.nav-buttons .pill:hover{filter:brightness(1.1)}
+.upload-zone{margin-top:8px;}
 
-/* Stage/Voice below header, above chat */
+/* Halo / Voice */
 .stage{
   flex:0 0 auto;
   display:flex;align-items:center;justify-content:center;
   height:45vh;
-  margin-top:-12px;
+  margin-top:-20px; /* lifts Click-to-Talk */
   position:relative;
-  z-index:700;
 }
-
-/* Keep Stop directly under halo */
-.halo-stack{
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-  gap:14px;
-}
-
-/* Halo button */
 .halo-btn{
   position:relative;
-  width:200px;height:200px;border-radius:50%;border:none;cursor:pointer;
+  width:200px;height:200px;
+  border-radius:50%;border:none;
   background:radial-gradient(60% 60% at 50% 40%,#1d3b63,#0f1d33 60%,#0b1427 100%);
   box-shadow:inset 0 0 40px #0a1b35,0 10px 50px rgba(0,0,0,.6);
+  cursor:pointer;
 }
 .halo-btn .halo-label{
   position:absolute;left:50%;top:50%;
@@ -73,52 +67,57 @@ body{
 .ring.r3{inset:-30px;opacity:.45;animation-duration:4s}
 @keyframes float{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
 
-/* Stop (sits under halo, above chat) */
+/* Stop Voice Button */
 .stop-btn{
-  background:linear-gradient(180deg,#22385e,#1b2e4d);
-  color:#fff;border:1px solid #355;border-radius:999px;
-  padding:8px 18px;cursor:pointer;font-size:0.9rem;
-  box-shadow:0 4px 20px rgba(0,0,0,0.4);
-  z-index:720;
+  position:absolute;
+  bottom:-70px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#222f45;
+  color:#fff;
+  border:1px solid #355;
+  border-radius:999px;
+  padding:8px 16px;
+  cursor:pointer;
+  font-size:0.9rem;
 }
 .hidden{display:none;}
 
-/* Classic Chat — push down, lighten slightly */
+/* Classic Chat (No Voice Mode) */
 .quiet{
   max-width:600px;width:90%;
-  margin-top:28px;   /* moved down a bit */
-  margin-bottom:80px;
+  margin-top:10px;margin-bottom:75px;
   display:flex;flex-direction:column;gap:12px;
-  position:relative;z-index:100;
+  position:relative;
+  z-index:10;
 }
 .quiet-form{
   display:flex;align-items:center;gap:8px;
-  background:linear-gradient(180deg,#1a2a48,#12223e); /* brighter navy */
-  border:1px solid #223c6a;border-radius:14px;
-  padding:10px 12px;box-shadow:var(--shadow);
+  background:linear-gradient(180deg,#0d1428,#0a1121);
+  border:1px solid #1b2a4f;border-radius:14px;
+  padding:8px 12px;box-shadow:var(--shadow);
 }
 .quiet-input{
-  flex:1;background:rgba(255,255,255,0.08);border:none;outline:none;color:var(--ink);
-  font-size:1rem;padding:10px;border-radius:8px;
+  flex:1;background:transparent;border:none;outline:none;color:var(--ink);
+  font-size:1rem;padding:8px;
 }
-.quiet-input::placeholder{color:#d6e7ff;opacity:0.95;}
-.quiet-input:focus{background:rgba(255,255,255,0.14);outline:1px solid var(--accent);}
+.quiet-input::placeholder{color:#cfe4ff;opacity:0.9;}
 .send-btn{
   background:linear-gradient(180deg,#1a355a,#122441);
   border:1px solid #294a78;color:#dff0ff;font-weight:600;
-  border-radius:999px;padding:9px 16px;
+  border-radius:999px;padding:8px 16px;
   box-shadow:0 0 12px rgba(78,168,255,0.35);
 }
+.send-btn:hover{filter:brightness(1.15);}
 
-/* Thread */
-.thread{max-height:36vh;overflow:auto;padding:6px 2px;}
-.thread div{padding:4px 0;line-height:1.4}
-
-/* Corner buttons stay where they were */
+/* Corner Buttons */
 .corner-btn{
-  position:fixed;bottom:10px;background:#101c33;color:#e6ebff;border:1px solid #20345e;
+  position:fixed;
+  bottom:10px;
+  background:#101c33;color:#e6ebff;border:1px solid #20345e;
   border-radius:999px;padding:7px 12px;font-weight:500;font-size:0.85rem;
-  cursor:pointer;box-shadow:var(--shadow);z-index:1200;text-decoration:none;line-height:1.2;
+  cursor:pointer;box-shadow:var(--shadow);
+  z-index:20;text-decoration:none;line-height:1.2;
 }
 .corner-btn.left{left:14px;}
 .corner-btn.right{right:14px;}
@@ -127,7 +126,7 @@ body{
 .modal{
   position:fixed;inset:0;background:rgba(0,0,0,0.7);
   display:flex;align-items:center;justify-content:center;
-  z-index:2000;backdrop-filter:blur(3px);
+  z-index:100;backdrop-filter:blur(3px);
 }
 .modal.hidden{display:none;}
 .modal-content{
@@ -136,13 +135,25 @@ body{
   padding:24px;max-width:500px;width:90%;
   box-shadow:var(--shadow);text-align:center;
 }
+.modal-content h2{color:var(--accent-2);margin-bottom:10px;}
+.cart-table{width:100%;margin:10px 0;border-collapse:collapse;}
+.cart-table td{padding:6px 0;border-bottom:1px solid #20345e;}
+.checkout-form{display:flex;flex-direction:column;gap:8px;text-align:left;margin-top:10px;}
+.checkout-form label{font-size:0.9rem;color:#a6c8ff;}
+.checkout-form input{
+  padding:8px;border-radius:6px;border:1px solid #244173;
+  background:#132238;color:var(--ink);
+}
+.note{font-size:0.85rem;color:#b4cfff;margin-top:10px;}
 
 /* Responsive */
 @media(max-width:600px){
   .brand{font-size:1.8rem;}
   .nav-buttons .pill{flex:1;}
   .halo-btn{width:170px;height:170px;}
-  .quiet{width:92%;max-width:420px;margin-bottom:88px;}
+  .stop-btn{bottom:-60px;}
+  .quiet{width:92%;max-width:420px;margin-bottom:80px;}
+  .corner-btn{font-size:0.9rem;padding:8px 14px;}
 }
 @media(min-width:1200px){
   .brand{font-size:2.3rem;}
