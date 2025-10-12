@@ -10,7 +10,7 @@ app.use(express.json({ limit: "2mb" }));
 // 🟢 Health check
 app.get("/health", (_req, res) => res.json({ ok: true, ts: Date.now() }));
 
-// 🟢 Text chat endpoint (original)
+// 🟢 Classic Chat endpoint (fixed parser)
 app.post("/chat", async (req, res) => {
   try {
     const { prompt } = req.body || {};
@@ -32,7 +32,15 @@ app.post("/chat", async (req, res) => {
     });
 
     const data = await r.json();
-    const text = data.output_text || "(no response)";
+
+    // ✅ Parser fix: handles all OpenAI response shapes
+    let text =
+      data.output_text ||
+      data.output?.[0]?.content?.[0]?.text ||
+      data.output?.[0]?.content ||
+      data.choices?.[0]?.message?.content ||
+      "(no response)";
+
     res.json({ reply: text });
   } catch (err) {
     console.error("Chat error:", err);
@@ -40,7 +48,7 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-// 🟣 Voice session endpoint
+// 🟣 Voice session endpoint (unchanged)
 app.post("/session", async (_req, res) => {
   try {
     const r = await fetch("https://api.openai.com/v1/realtime/sessions", {
