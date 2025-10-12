@@ -18,18 +18,14 @@
   </header>
 
   <main class="stage">
-    <!-- NEW: stack to keep Stop directly under halo, centered -->
-    <div class="halo-stack">
-      <button id="haloBtn" class="halo-btn">
-        <div class="halo ring r1"></div>
-        <div class="halo ring r2"></div>
-        <div class="halo ring r3"></div>
-        <span class="halo-label">Click&nbsp;to&nbsp;Talk</span>
-      </button>
-      <button id="stopBtn" class="stop-btn hidden">Stop Voice</button>
-    </div>
-
+    <button id="haloBtn" class="halo-btn">
+      <div class="halo ring r1"></div>
+      <div class="halo ring r2"></div>
+      <div class="halo ring r3"></div>
+      <span class="halo-label">Click&nbsp;to&nbsp;Talk</span>
+    </button>
     <audio id="remote" autoplay playsinline></audio>
+    <button id="stopBtn" class="stop-btn hidden">Stop Voice</button>
   </main>
 
   <!-- Classic Chat -->
@@ -146,11 +142,12 @@
     thread.scrollTop=thread.scrollHeight;
   };
 
-  // Stripe Checkout (leave as-is; API wiring handled elsewhere)
+  // Stripe Checkout
+  const stripe = Stripe("pk_test_51SHCGpE44DdqctQ41sbQyxJ2Sjx4yh6SXV01ZSB34foIWPvl8OKCkfkYw9017PhK2tp0euZTaLjxvI1FOQ4uA8hm00ELjyCDK5");
   document.getElementById("checkoutBtn").addEventListener("click", async () => {
     const resp = await fetch("/create-checkout-session", { method: "POST" });
     const data = await resp.json();
-    if (data?.url) window.location.href = data.url;
+    window.location.href = data.url;
   });
   </script>
 </body>
