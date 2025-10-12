@@ -41,37 +41,33 @@
   <button class="corner-btn left" onclick="window.print()">🖨 Print Conversation</button>
   <a class="corner-btn right" href="tel:18005551234">📞 Contact Human</a>
 
-  <!-- CART MODAL -->
+  <!-- 🛒 CART MODAL -->
   <div id="cartModal" class="modal hidden">
     <div class="modal-content">
-      <h2>Your Cart</h2>
-      <div class="cart-item">
-        <img src="https://dummyimage.com/100x100/4ea8ff/ffffff&text=VoxTalk" alt="Product">
-        <div class="cart-details">
-          <p class="item-name">VoxTalk Subscription (Demo)</p>
-          <p class="item-desc">AI voice + chat assistant for your store or site.</p>
-          <p class="item-price">$50.00</p>
-        </div>
-      </div>
-      <hr>
-      <p class="subtotal">Subtotal: <strong>$50.00</strong></p>
+      <h2>Your Cart – WalSmart™</h2>
+      <table class="cart-table">
+        <tr><td>Organic Apples (2 lb)</td><td>$3.49</td></tr>
+        <tr><td>Windshield De-Icer – 1 gal</td><td>$12.99</td></tr>
+        <tr class="total-row"><td><strong>Total</strong></td><td><strong>$16.48</strong></td></tr>
+      </table>
+      <p>Click <strong>Checkout</strong> to proceed or <strong>Close</strong> to continue shopping.</p>
       <button class="pill" onclick="closeModal('cartModal')">Close</button>
     </div>
   </div>
 
-  <!-- INFO MODAL -->
+  <!-- ℹ️ INFO MODAL -->
   <div id="infoModal" class="modal hidden">
     <div class="modal-content">
-      <h2>About VoxTalk</h2>
-      <p><strong>Talk or type — your calm AI partner for any website.</strong></p>
-      <p>VoxTalk brings real-time voice conversation and instant answers to any business website, store, or customer portal. It remembers context, provides help, and connects to checkout.</p>
-      <p>Use the <em>Click to Talk</em> button to start voice chat, or type below for text conversation.</p>
-      <p class="note">Powered by OpenAI and Stripe (Test Mode). Click outside this box to return.</p>
+      <h2>About VoxTalk & WalSmart</h2>
+      <p><strong>WalSmart™ is built on VoxTalk™</strong> — a conversational assistant designed for partnership.<br>
+      Technology that listens, and humans who lead.</p>
+      <p>You can talk, or if you prefer, use “No Voice Mode” and type your question instead.</p>
+      <p class="note">Click outside this box to return.</p>
       <button class="pill" onclick="closeModal('infoModal')">Close</button>
     </div>
   </div>
 
-  <!-- CHECKOUT MODAL -->
+  <!-- 💳 CHECKOUT MODAL -->
   <div id="checkoutModal" class="modal hidden">
     <div class="modal-content">
       <h2>Secure Checkout</h2>
