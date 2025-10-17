@@ -67,4 +67,42 @@ app.post("/session", async (_req, res) => {
     setTimeout(() => console.log("🔔 6-minute session timeout reached."), 360000);
   } catch (e) {
     console.error("Session error:", e);
-    res.status(500).json({ error: "session
+    res.status(500).json({ error: "session_failed" });
+  }
+});
+
+// 🧾 Stripe checkout
+app.post("/create-checkout-session", async (_req, res) => {
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: { name: "Windshield De-Icer – 1 gal" },
+            unit_amount: 1299
+          },
+          quantity: 1
+        },
+        {
+          price_data: {
+            currency: "usd",
+            product_data: { name: "Organic Apples (2 lb)" },
+            unit_amount: 349
+          },
+          quantity: 1
+        }
+      ],
+      success_url: "https://example.com/success",
+      cancel_url: "https://example.com/cancel"
+    });
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error("Stripe error:", err.message);
+    res.status(500).json({ error: "Stripe checkout failed" });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("✅ VoxTalk Clone-11 running on port " + PORT));
