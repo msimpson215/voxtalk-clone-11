@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -78,14 +79,14 @@
   </div>
 
   <script>
-  // ----- Modal Logic -----
+  // Modal logic
   function openModal(id){ document.getElementById(id).classList.remove("hidden"); }
   function closeModal(id){ document.getElementById(id).classList.add("hidden"); }
   document.querySelectorAll(".modal").forEach(m =>
     m.addEventListener("click", e => { if(e.target===m) m.classList.add("hidden"); })
   );
 
-  // ----- Voice -----
+  // Voice
   const haloBtn=document.getElementById("haloBtn");
   const stopBtn=document.getElementById("stopBtn");
   const remote=document.getElementById("remote");
@@ -123,7 +124,7 @@
     stopBtn.classList.add("hidden");
   };
 
-  // ----- Classic Chat -----
+  // Classic Chat
   const form=document.getElementById("quietForm");
   const input=document.getElementById("quietInput");
   const thread=document.getElementById("thread");
@@ -138,12 +139,11 @@
     const resp=await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:text})});
     const data=await resp.json();
     const botDiv=document.createElement("div");
-    botDiv.textContent="🤖 "+(data.reply||"..."); 
-    thread.appendChild(botDiv);
+    botDiv.textContent="🤖 "+(data.reply||"..."); thread.appendChild(botDiv);
     thread.scrollTop=thread.scrollHeight;
   };
 
-  // ----- Stripe Checkout -----
+  // Stripe Checkout
   const stripe = Stripe("pk_test_51SHCGpE44DdqctQ41sbQyxJ2Sjx4yh6SXV01ZSB34foIWPvl8OKCkfkYw9017PhK2tp0euZTaLjxvI1FOQ4uA8hm00ELjyCDK5");
   document.getElementById("checkoutBtn").addEventListener("click", async () => {
     const resp = await fetch("/create-checkout-session", { method: "POST" });
