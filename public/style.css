@@ -14,8 +14,7 @@ body{
   color:var(--ink);
   background:radial-gradient(1200px 800px at 50% -200px,#16305a 0%,var(--bg) 40%,var(--bg) 100%);
   display:flex;flex-direction:column;align-items:center;
-  font-size:13px;
-  overflow-x:hidden;
+  font-size:13px;overflow-x:hidden;
 }
 
 /* Header */
@@ -36,23 +35,17 @@ body{
 
 /* Halo / Voice */
 .stage{
-  flex:0 0 auto;
-  display:flex;align-items:center;justify-content:center;
-  height:45vh;
-  margin-top:-20px;
-  position:relative;
+  flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  height:45vh;margin-top:-20px;position:relative;
 }
 .halo-btn{
-  position:relative;
-  width:200px;height:200px;
-  border-radius:50%;border:none;
+  position:relative;width:200px;height:200px;border-radius:50%;border:none;
   background:radial-gradient(60% 60% at 50% 40%,#1d3b63,#0f1d33 60%,#0b1427 100%);
   box-shadow:inset 0 0 40px #0a1b35,0 10px 50px rgba(0,0,0,.6);
   cursor:pointer;
 }
 .halo-btn .halo-label{
-  position:absolute;left:50%;top:50%;
-  transform:translate(-50%,-50%);
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   font-weight:700;font-size:1rem;color:#dff0ff;letter-spacing:.4px;
 }
 .halo{position:absolute;inset:-8px;border-radius:50%;pointer-events:none;}
@@ -67,27 +60,16 @@ body{
 
 /* Stop Voice Button */
 .stop-btn{
-  position:absolute;
-  bottom:-70px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#222f45;
-  color:#fff;
-  border:1px solid #355;
-  border-radius:999px;
-  padding:8px 16px;
-  cursor:pointer;
-  font-size:0.9rem;
+  position:absolute;bottom:-70px;left:50%;transform:translateX(-50%);
+  background:#222f45;color:#fff;border:1px solid #355;
+  border-radius:999px;padding:8px 16px;cursor:pointer;font-size:0.9rem;
 }
 .hidden{display:none;}
 
-/* Classic Chat (No Voice Mode) */
+/* Classic Chat */
 .quiet{
-  max-width:600px;width:90%;
-  margin-top:10px;margin-bottom:75px;
-  display:flex;flex-direction:column;gap:12px;
-  position:relative;
-  z-index:10;
+  max-width:600px;width:90%;margin-top:10px;margin-bottom:75px;
+  display:flex;flex-direction:column;gap:12px;position:relative;z-index:10;
 }
 .quiet-form{
   display:flex;align-items:center;gap:8px;
@@ -107,15 +89,15 @@ body{
   box-shadow:0 0 12px rgba(78,168,255,0.35);
 }
 .send-btn:hover{filter:brightness(1.15)}
+.thread{margin-top:10px;min-height:60px;display:flex;flex-direction:column;gap:4px;}
+.chat-link{color:#4ea8ff;text-decoration:underline;word-break:break-word;}
+.chat-link:hover{filter:brightness(1.3);}
 
 /* Corner Buttons */
 .corner-btn{
-  position:fixed;
-  bottom:10px;
-  background:#101c33;color:#e6ebff;border:1px solid #20345e;
+  position:fixed;bottom:10px;background:#101c33;color:#e6ebff;border:1px solid #20345e;
   border-radius:999px;padding:7px 12px;font-weight:500;font-size:0.85rem;
-  cursor:pointer;box-shadow:var(--shadow);
-  z-index:20;text-decoration:none;line-height:1.2;
+  cursor:pointer;box-shadow:var(--shadow);z-index:20;text-decoration:none;line-height:1.2;
 }
 .corner-btn.left{left:14px;}
 .corner-btn.right{right:14px;}
@@ -123,8 +105,7 @@ body{
 /* Modals */
 .modal{
   position:fixed;inset:0;background:rgba(0,0,0,0.7);
-  display:flex;align-items:center;justify-content:center;
-  z-index:100;backdrop-filter:blur(3px);
+  display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(3px);
 }
 .modal.hidden{display:none;}
 .modal-content{
@@ -136,12 +117,6 @@ body{
 .modal-content h2{color:var(--accent-2);margin-bottom:10px;}
 .cart-table{width:100%;margin:10px 0;border-collapse:collapse;}
 .cart-table td{padding:6px 0;border-bottom:1px solid #20345e;}
-.checkout-form{display:flex;flex-direction:column;gap:8px;text-align:left;margin-top:10px;}
-.checkout-form label{font-size:0.9rem;color:#a6c8ff;}
-.checkout-form input{
-  padding:8px;border-radius:6px;border:1px solid #244173;
-  background:#132238;color:var(--ink);
-}
 .note{font-size:0.85rem;color:#b4cfff;margin-top:10px;}
 
 /* Responsive */
