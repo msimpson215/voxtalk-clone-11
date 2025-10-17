@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -72,8 +71,8 @@
   <div id="checkoutModal" class="modal hidden">
     <div class="modal-content">
       <h2>Secure Checkout</h2>
-      <p>You’ll be redirected to a secure Stripe checkout page (Test Mode).</p>
-      <button id="checkoutBtn" class="pill">Proceed to Payment</button>
+      <p>You’ll be redirected to Walmart Groceries.</p>
+      <button id="checkoutBtn" class="pill">Go to Walmart Groceries</button>
       <button class="pill ghost" onclick="closeModal('checkoutModal')">Cancel</button>
     </div>
   </div>
@@ -115,6 +114,13 @@
     await pc.setRemoteDescription(answer);
     haloBtn.querySelector(".halo-label").textContent="Live";
     stopBtn.classList.remove("hidden");
+
+    // 6-minute timeout
+    setTimeout(()=>{
+      if(!pc)return;
+      stopBtn.click();
+      alert("Your voice time has expired. Please switch to Classic Chat to continue.");
+    },360000);
   };
   stopBtn.onclick=()=>{
     if(localStream) localStream.getTracks().forEach(t=>t.stop());
@@ -123,6 +129,15 @@
     haloBtn.querySelector(".halo-label").textContent="Click to Talk";
     stopBtn.classList.add("hidden");
   };
+
+  // linkify URLs
+  function linkify(text){
+    const urlRegex=/(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+    return text.replace(urlRegex,url=>{
+      const href=url.startsWith("http")?url:`https://${url}`;
+      return `<a href="${href}" target="_blank" class="chat-link">${url}</a>`;
+    });
+  }
 
   // Classic Chat
   const form=document.getElementById("quietForm");
@@ -139,16 +154,14 @@
     const resp=await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:text})});
     const data=await resp.json();
     const botDiv=document.createElement("div");
-    botDiv.textContent="🤖 "+(data.reply||"..."); thread.appendChild(botDiv);
+    botDiv.innerHTML="🤖 "+linkify(data.reply||"...");
+    thread.appendChild(botDiv);
     thread.scrollTop=thread.scrollHeight;
   };
 
-  // Stripe Checkout
-  const stripe = Stripe("pk_test_51SHCGpE44DdqctQ41sbQyxJ2Sjx4yh6SXV01ZSB34foIWPvl8OKCkfkYw9017PhK2tp0euZTaLjxvI1FOQ4uA8hm00ELjyCDK5");
-  document.getElementById("checkoutBtn").addEventListener("click", async () => {
-    const resp = await fetch("/create-checkout-session", { method: "POST" });
-    const data = await resp.json();
-    window.location.href = data.url;
+  // Checkout → Walmart Groceries
+  document.getElementById("checkoutBtn").addEventListener("click",()=>{
+    window.open("https://www.walmart.com/grocery","_blank");
   });
   </script>
 </body>
